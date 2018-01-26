@@ -1,6 +1,6 @@
 {
   "name": "lymph-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "dev server for working with static client applications",
   "bin": {
     "lymph-server": "index.js"
@@ -8,6 +8,9 @@
   "scripts": {},
   "author": "",
   "license": "ISC",
+  "repository": {
+    "url": "https://github.com/efleming969/lymph-server"
+  },
   "dependencies": {
     "commander": "^2.13.0",
     "express": "^4.16.2",
