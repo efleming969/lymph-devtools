@@ -1,0 +1,26 @@
+{
+  "name": "lymph-devtools",
+  "version": "1.0.0",
+  "description": "tools for working with lymph libraries",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.2",
+    "fs-extra": "latest",
+    "mustache": "^2.3.0",
+    "postcss": "^6.0.16",
+    "postcss-cli": "^4.1.1",
+    "ramda": "^0.25.0",
+    "rollup": "^0.55.0",
+    "shelljs": "^0.8.1",
+    "typescript": "^2.6.2"
+  },
+  "devDependencies": {
+    "rollup-plugin-node-resolve": "^3.0.2"
+  },
+  "lymph": {}
+}
