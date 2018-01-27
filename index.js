@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
 const Commander = require( "commander" )
-const Server = require( "./lib/src/Server" )
+const Server = require( "./lib/Server" )
 
-Commander.version( "1.0.0" )
-    .option( "-p, --port <port>", "port", 8080 )
+const result = Commander.version( "1.0.0" )
+    .option( "-r, --root [path]", "path to module dir", "src" )
+    .option( "-p, --port [port]", "port", 8080 )
     .parse( process.argv )
 
 Server.run( Commander )

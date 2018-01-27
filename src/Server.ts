@@ -16,31 +16,31 @@ export const run = function ( config ) {
             <ul>${ modules.map( m => `<li> <a href="/modules/${m}/index.html">${m}</a></li>` ).join( "" ) }</ul>
         </body>
     </html>
-`
+    `
 
     app.get( "/", function ( req, res ) {
-        FS.readdir( Path.join( process.cwd(), "src", "modules" ), function ( err, modules ) {
-            res.send( defaultRootTemplate( modules ) )
+        FS.readdir( Path.join( process.cwd(), config.root, "modules" ), function ( err, modules ) {
+            res.send( defaultRootTemplate( modules || [] ) )
         } )
     } )
 
     app.get( "/modules/:module_name/index.html", function ( req, res ) {
         const module_name = req.params.module_name
-        const template_dir = Path.join( process.cwd(), "src", "modules", module_name )
+        const template_dir = Path.join( process.cwd(), config.root, "modules", module_name )
         const template_path = Path.join( template_dir, "index.html" )
-        const template_config_path = Path.join( template_dir, "index.json" )
+        // const template_config_path = Path.join( template_dir, "index.json" )
 
-        FS.readFile( template_config_path, "utf8", function ( err, raw_config ) {
-            const config = JSON.parse( raw_config.replace( /"{([a-zA-Z_]*)}"/, function ( match, env_name ) {
-                return '"' + process.env[ env_name ] + '"'
-            } ) )
-            FS.readFile( template_path, "utf8", function ( err, template ) {
-                res.send( Mustache.render( template, config ) )
-            } )
+        // FS.readFile( template_config_path, "utf8", function ( err, raw_config ) {
+        // const config = JSON.parse( raw_config.replace( /"{([a-zA-Z_]*)}"/, function ( match, env_name ) {
+        //     return '"' + process.env[ env_name ] + '"'
+        // } ) )
+        FS.readFile( template_path, "utf8", function ( err, template ) {
+            res.send( Mustache.render( template, {} ) )
         } )
+        // } )
     } )
 
-    app.use( Express.static( "src" ) )
+    app.use( Express.static( config.root ) )
 
     app.get( "/node_modules/:module_name", function ( req, res ) {
         const module_name = req.params.module_name
@@ -49,7 +49,8 @@ export const run = function ( config ) {
 
         FS.readFile( module_package_path, "utf8", function ( err, raw_package_config ) {
             const package_config = JSON.parse( raw_package_config )
-            res.redirect( `/node_modules/${module_name}/${package_config.main.replace( ".js", "" )}` )
+            if (package_config.module == null) throw "dependencies must support es modules"
+            res.redirect( `/node_modules/${module_name}/${package_config.module.replace( ".js", "" )}` )
         } )
     } )
 
@@ -58,8 +59,7 @@ export const run = function ( config ) {
     } )
 
     app.get( /\/(modules|components)\/*/, function ( req, res ) {
-        const source_file = Path.join( process.cwd(), "src", req.url.replace( ".js", "" ) + ".ts" )
-        console.log( "transpiling", source_file )
+        const source_file = Path.join( process.cwd(), config.root, req.url.replace( ".js", "" ) + ".ts" )
         FS.readFile( source_file, "utf8", function ( err, file ) {
             const result = Typescript.transpileModule( file, {
                 compilerOptions: {
