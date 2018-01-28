@@ -1,6 +1,6 @@
 {
   "name": "lymph-server",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "dev server for working with static client applications",
   "bin": {
     "lymph-server": "index.js"
