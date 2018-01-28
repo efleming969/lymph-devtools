@@ -49,7 +49,7 @@ export const run = function ( config ) {
 
         FS.readFile( module_package_path, "utf8", function ( err, raw_package_config ) {
             const package_config = JSON.parse( raw_package_config )
-            if (package_config.module == null) throw "dependencies must support es modules"
+            if ( package_config.module == null ) throw "dependencies must support es modules"
             res.redirect( `/node_modules/${module_name}/${package_config.module.replace( ".js", "" )}` )
         } )
     } )
@@ -70,8 +70,8 @@ export const run = function ( config ) {
                 fileName: source_file
             } )
             res.header( { "content-type": "application/javascript" } )
-            res.send( result.outputText.replace( /from \"([a-z\-\/]*)\"/, function ( match, p1 ) {
-                return `from "/node_modules/${ p1 }"`
+            res.send( result.outputText.replace( /from \"([a-zA-Z_\-\/]*)\"/g, function ( match, p1 ) {
+                return (p1[0] === "." || p1[0] === "/") ? p1 : `from "/node_modules/${ p1 }"`
             } ) )
         } )
     } )

@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "^9.4.0",
-    "ramda": "^0.25.0",
+    "lymph-client": "^0.14.1",
     "rollup-plugin-node-resolve": "^3.0.2"
   }
 }
