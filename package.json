@@ -1,7 +1,7 @@
 {
   "name": "lymph-devtools",
-  "version": "1.4.0",
-  "description": "dev server for working with static client applications",
+  "version": "0.5.0",
+  "description": "tools for working with 'rich' client applications",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc --project tsconfig.json"
