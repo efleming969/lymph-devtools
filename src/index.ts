@@ -3,6 +3,7 @@ import * as Typescript from "typescript"
 import * as FS from "fs"
 import * as Path from "path"
 import * as Mustache from "mustache"
+import * as Resolve from "resolve"
 
 export const run = function ( config ) {
 
@@ -28,31 +29,26 @@ export const run = function ( config ) {
         const module_name = req.params.module_name
         const template_dir = Path.join( process.cwd(), config.root, "modules", module_name )
         const template_path = Path.join( template_dir, "index.html" )
-        // const template_config_path = Path.join( template_dir, "index.json" )
 
-        // FS.readFile( template_config_path, "utf8", function ( err, raw_config ) {
-        // const config = JSON.parse( raw_config.replace( /"{([a-zA-Z_]*)}"/, function ( match, env_name ) {
-        //     return '"' + process.env[ env_name ] + '"'
-        // } ) )
         FS.readFile( template_path, "utf8", function ( err, template ) {
-            res.send( Mustache.render( template, {} ) )
+            res.send( Mustache.render( template, config.modules[ module_name ] || {} ) )
         } )
-        // } )
     } )
 
     app.use( Express.static( config.root ) )
 
-    app.get( "/node_modules/:module_name", function ( req, res ) {
-        const module_name = req.params.module_name
+    const getESModuleIndex = function ( module_name ) {
+
         const module_dir = Path.join( process.cwd(), "node_modules", module_name )
         const module_package_path = Path.join( module_dir, "package.json" )
 
-        FS.readFile( module_package_path, "utf8", function ( err, raw_package_config ) {
-            const package_config = JSON.parse( raw_package_config )
-            if ( package_config.module == null ) throw "dependencies must support es modules"
-            res.redirect( `/node_modules/${module_name}/${package_config.module.replace( ".js", "" )}` )
-        } )
-    } )
+        const raw_package_config = FS.readFileSync( module_package_path, "utf8" )
+        const package_config = JSON.parse( raw_package_config )
+
+        if ( package_config.module == null ) throw "dependencies must support es modules"
+
+        return Path.join( "/", "node_modules", module_name, package_config.module.replace( ".js", "" ) )
+    }
 
     app.get( "/node_modules/*", function ( req, res ) {
         res.sendFile( Path.join( process.cwd(), req.url + ".js" ) )
@@ -71,7 +67,11 @@ export const run = function ( config ) {
             } )
             res.header( { "content-type": "application/javascript" } )
             res.send( result.outputText.replace( /from \"([a-zA-Z_\-\/]*)\"/g, function ( match, p1 ) {
-                return (p1[0] === "." || p1[0] === "/") ? p1 : `from "/node_modules/${ p1 }"`
+                if ( p1[ 0 ] === "." || p1[ 0 ] === "/" ) {
+                    return p1
+                }
+
+                return `from "${ getESModuleIndex( p1 ) }"`
             } ) )
         } )
     } )

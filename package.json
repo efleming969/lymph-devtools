@@ -1,22 +1,22 @@
 {
-  "name": "lymph-server",
-  "version": "1.2.0",
+  "name": "lymph-devtools",
+  "version": "1.4.0",
   "description": "dev server for working with static client applications",
-  "bin": {
-    "lymph-server": "index.js"
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc --project tsconfig.json"
   },
-  "scripts": {},
   "author": "",
   "license": "ISC",
   "repository": {
     "url": "https://github.com/efleming969/lymph-server"
   },
   "dependencies": {
-    "commander": "^2.13.0",
     "express": "^4.16.2",
     "fs-extra": "latest",
     "mustache": "^2.3.0",
     "postcss": "^6.0.16",
+    "resolve": "^1.5.0",
     "rollup": "^0.55.0",
     "typescript": "^2.6.2"
   },
