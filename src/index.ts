@@ -47,7 +47,7 @@ export const run = function ( config ) {
 
         if ( package_config.module == null ) throw "dependencies must support es modules"
 
-        return Path.join( "/", "node_modules", module_name, package_config.module.replace( ".js", "" ) )
+        return `/node_modules/${ module_name }/${ package_config.module.replace( ".js", "" ) }`
     }
 
     app.get( "/node_modules/*", function ( req, res ) {
