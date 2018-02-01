@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "repository": {
-    "url": "https://github.com/efleming969/lymph-server"
+    "url": "https://github.com/efleming969/lymph-devtools"
   },
   "dependencies": {
     "express": "^4.16.2",
