@@ -1,3 +1,7 @@
+body {
+    --main-bg-color: silver;
+}
+
 h1 {
     font-family: monospace;
 }

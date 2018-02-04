@@ -3,7 +3,6 @@ import * as Typescript from "typescript"
 import * as FS from "fs"
 import * as Path from "path"
 import * as Mustache from "mustache"
-import * as Resolve from "resolve"
 
 export const run = function ( config ) {
 
@@ -18,25 +17,6 @@ export const run = function ( config ) {
         </body>
     </html>
     `
-
-    app.get( "/", function ( req, res ) {
-        FS.readdir( Path.join( process.cwd(), config.root, "modules" ), function ( err, modules ) {
-            res.send( defaultRootTemplate( modules || [] ) )
-        } )
-    } )
-
-    app.get( "/modules/:module_name/index.html", function ( req, res ) {
-        const module_name = req.params.module_name
-        const template_dir = Path.join( process.cwd(), config.root, "modules", module_name )
-        const template_path = Path.join( template_dir, "index.html" )
-
-        FS.readFile( template_path, "utf8", function ( err, template ) {
-            res.send( Mustache.render( template, config.modules[ module_name ] || {} ) )
-        } )
-    } )
-
-    app.use( Express.static( config.root ) )
-
     const getESModuleIndex = function ( module_name ) {
 
         const module_dir = Path.join( process.cwd(), "node_modules", module_name )
@@ -49,6 +29,28 @@ export const run = function ( config ) {
 
         return `/node_modules/${ module_name }/${ package_config.module.replace( ".js", "" ) }`
     }
+
+    app.get( "/", function ( req, res ) {
+        FS.readdir( Path.join( process.cwd(), config.root, "modules" ), function ( err, modules ) {
+            res.send( defaultRootTemplate( modules || [] ) )
+        } )
+    } )
+
+    app.get( "/:module_name.html", function ( req, res ) {
+        const module_name = req.params.module_name
+        const template_dir = Path.join( process.cwd(), config.root, "modules", module_name )
+        const template_path = Path.join( template_dir, "index.html" )
+
+        FS.readFile( template_path, "utf8", function ( err, template ) {
+            const template_config = Object.assign( {},
+                config.modules[ module_name ],
+                { base: `/modules/${ module_name }/` } )
+
+            res.send( Mustache.render( template, template_config ) )
+        } )
+    } )
+
+    app.use( Express.static( config.root ) )
 
     app.get( "/node_modules/*", function ( req, res ) {
         res.sendFile( Path.join( process.cwd(), req.url + ".js" ) )
