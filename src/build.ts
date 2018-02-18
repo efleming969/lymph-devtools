@@ -30,7 +30,7 @@ const compileCommonStyles = function () {
     } )
 }
 
-const buildModules = function () {
+export const buildModules = function () {
     const compileScript = function ( module_name ) {
         const compile_options = {
             noEmitOnError: true,
@@ -128,6 +128,8 @@ const copyCommonImages = function () {
         Path.join( cwd, "dist", "common", "images" ) )
 }
 
-compileCommonStyles()
-copyCommonImages()
-buildModules()
+export const run = function () {
+    compileCommonStyles()
+    copyCommonImages()
+    buildModules()
+}
