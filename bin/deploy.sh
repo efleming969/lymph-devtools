@@ -20,9 +20,11 @@ for MODULE_FILE in $MODULE_FILES; do
     FUNCTION_NAME=$NAMESPACE--$MODULE_NAME
     ARTIFACT_KEY=$FUNCTION_NAME.zip
 
-    # compile module using typescript compiler
-    $(npm bin)/tsc --outDir $MODULE_NAME $MODULE_FILE
+    # publish lambda package to an S3 bucket
+    aws s3 cp $ARTIFACT_KEY s3://$ARTIFACT_BUCKET
 
-    # create the lambda package (need to cd into dir to avoid root folder being added)
-    zip -r $ARTIFACT_KEY $MODULE_NAME
+    # update lambda configuration with newly published package
+    aws lambda update-function-code --function-name $FUNCTION_NAME \
+        --s3-bucket $ARTIFACT_BUCKET \
+        --s3-key $ARTIFACT_KEY
 done

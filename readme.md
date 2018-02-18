@@ -81,3 +81,7 @@ aws lambda create-function --function-name "$FUNCTION_NAME" \
     --handler "$NAMESPACE/$MODULE_NAME.handler" \
     --code "S3Bucket=$NAMESPACE-artifacts,S3Key=$MODULE_NAME.zip" 
 ```
+
+# Backlog
+
+* create build system that can automatically run in CI tool, like Bitbucket Pipelines

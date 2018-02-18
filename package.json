@@ -1,6 +1,6 @@
 {
   "name": "lymph-devtools",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "tools for working with 'rich' client applications",
   "main": "lib/index.js",
   "scripts": {
@@ -9,6 +9,7 @@
   "bin": {
     "lymph-create": "./bin/create.sh",
     "lymph-build": "./bin/build.sh",
+    "lymph-deploy": "./bin/deploy.sh",
     "lymph-release": "./bin/release.sh",
     "lymph-test": "./bin/test.sh"
   },
