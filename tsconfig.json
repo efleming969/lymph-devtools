@@ -3,7 +3,6 @@
     "target": "es2016",
     "module": "commonjs",
     "outDir": "lib",
-    "rootDir": "src",
     "moduleResolution": "node",
     "alwaysStrict": false
   }

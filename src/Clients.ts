@@ -3,7 +3,7 @@ const FS = require( "fs-extra" )
 const Path = require( "path" )
 const Rollup = require( "rollup" )
 const RollupResolve = require( "rollup-plugin-node-resolve" )
-const Mustache = require( "mustache" )
+// const Mustache = require( "mustache" )
 const PostCSS = require( "postcss" )
 
 const cwd = process.cwd()
@@ -89,11 +89,11 @@ export const buildModules = function () {
     const compileTemplate = function ( module_name ) {
         const src_path = Path.join( modules_src_dir, module_name, "index.html" )
         FS.readFile( src_path, "utf8", function ( err, src_template ) {
-            const compiled_template = Mustache.render( src_template, { title: "main" } )
-            const dist_path = Path.join( modules_dist_dir, module_name, "index.html" )
-            FS.writeFile( dist_path, compiled_template, "utf8", function ( err ) {
-                console.log( "created module template:", dist_path )
-            } )
+            // const compiled_template = Mustache.render( src_template, { title: "main" } )
+            // const dist_path = Path.join( modules_dist_dir, module_name, "index.html" )
+            // FS.writeFile( dist_path, compiled_template, "utf8", function ( err ) {
+            //     console.log( "created module template:", dist_path )
+            // } )
         } )
     }
 
@@ -129,7 +129,7 @@ const copyCommonImages = function () {
 }
 
 export const run = function () {
-    compileCommonStyles()
-    copyCommonImages()
-    buildModules()
+    // compileCommonStyles()
+    // copyCommonImages()
+    // buildModules()
 }
