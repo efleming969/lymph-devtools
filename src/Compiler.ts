@@ -7,7 +7,8 @@ export const compileScript = config => function ( module_file ) {
         target: Typescript.ScriptTarget.ES2015,
         module: Typescript.ModuleKind.ES2015,
         moduleResolution: Typescript.ModuleResolutionKind.NodeJs,
-        outDir: config.buildDir
+        inlineSourceMap: true,
+        inlineSources: true,
     }
 
     let program = Typescript.createProgram( [ module_file ], compile_options )
