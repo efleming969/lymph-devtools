@@ -2,6 +2,7 @@ import * as Typescript from "typescript"
 import * as Path from "path"
 import * as Glob from "globby"
 import * as Rollup from "rollup"
+import * as RollupUglify from "rollup-plugin-uglify"
 
 export type Script = {
     name: string,
@@ -55,7 +56,10 @@ export const bundle = function ( modules: Script[] ) {
         const rollup_input_options: Rollup.InputOptions = {
             input: module.script,
             onwarn: function ( warning ) {
-            }
+            },
+            plugins: [
+                RollupUglify()
+            ]
         }
 
         const rollup_output_options: Rollup.OutputOptions = {
