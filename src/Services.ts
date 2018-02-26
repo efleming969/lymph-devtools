@@ -73,16 +73,6 @@ export const updateFunction = config => function ( module_file ) {
     } )
 }
 
-export const recursiveExecuteOnDir = function ( fn, root ) {
-    FS.readdir( root, function ( e, files ) {
-        files.forEach( function ( file ) {
-            const path = Path.join( root, file )
-            !FS.statSync( path ).isDirectory() ?
-                fn( path ) : recursiveExecuteOnDir( fn, path )
-        } )
-    } )
-}
-
 export const compileModule = config => function ( module_file ) {
     const module_name = module_file.replace( ".ts", "" )
 

@@ -1,6 +1,6 @@
 import GreetingBuilder from "./GreetingBuilder"
-import Simple from "../../components/Simple"
-import { Utils, Lymph, HTML } from "lymph-client"
+import Simple from "./Simple"
+import { Utils, HTML } from "lymph-client"
 
 const builder = new GreetingBuilder()
 
