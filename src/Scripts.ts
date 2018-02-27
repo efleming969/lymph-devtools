@@ -1,5 +1,6 @@
 import * as Typescript from "typescript"
 import * as Path from "path"
+import * as FS from "fs-extra"
 import * as Glob from "globby"
 import * as Rollup from "rollup"
 import * as RollupUglify from "rollup-plugin-uglify"
@@ -9,7 +10,6 @@ export type Script = {
     script: string,
     bundle: string
 }
-
 
 export const compile = function ( modules: Script[] ) {
     const compile_options = {
@@ -75,7 +75,7 @@ export const bundle = function ( modules: Script[] ) {
     } ) ).then( () => modules )
 }
 
-export const detectModules = function ( source: string, target: string ) {
+export const detect = function ( source: string, target: string ) {
     const html_files_pattern = Path.join( source, "**", "*.html" )
 
     return Glob( html_files_pattern ).then( files => files.map( function ( f ) {

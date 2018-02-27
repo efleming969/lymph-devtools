@@ -1,44 +1,38 @@
 import * as Express from "express"
 import * as Typescript from "typescript"
-import * as FS from "fs"
+import * as FS from "fs-extra"
 import * as Path from "path"
 
-import * as Template from "./Template"
+import * as Templates from "./Templates"
+import * as Styles from "./Styles"
+
+const createPathFromRoot = root => function ( base_name: string ) {
+    return Path.join( process.cwd(), root, base_name )
+}
 
 export const run = function ( config ) {
 
     const app = Express()
-
-    const getESModuleIndex = function ( module_name ) {
-        const module_dir = Path.join( process.cwd(), "node_modules", module_name )
-        const module_package_path = Path.join( module_dir, "package.json" )
-
-        const raw_package_config = FS.readFileSync( module_package_path, "utf8" )
-        const package_config = JSON.parse( raw_package_config )
-
-        if ( package_config.module == null ) throw "dependencies must support es modules"
-
-        return `/node_modules/${ module_name }/${ package_config.module.replace( ".js", "" ) }`
-    }
+    const pathFromRoot = createPathFromRoot( config.root )
 
     app.get( "/:module_name.html", function ( req, res ) {
         const module_name = req.params.module_name
-        const template_path = Path.join( process.cwd(), config.root, `${ module_name }.html` )
+        const module_config_path = pathFromRoot( `${ module_name }.json` )
 
-        FS.readFile( template_path, "utf8", function ( err, template ) {
-            const template_config = Object.assign( {},
-                config.modules[ module_name ],
-                { dev: true } )
+        res.header( "content-type", "text/html" )
 
-            res.send( Template.render( template, template_config ) )
-        } )
+        FS.readFile( module_config_path, "utf8" )
+            .then( raw_config => JSON.parse( raw_config ) )
+            .then( config => Object.assign( {}, config, { dev: true } ) )
+            .then( Templates.render )
+            .then( template => res.send( template ) )
     } )
 
     app.get( "/node_modules/*", function ( req, res ) {
-        res.sendFile( Path.join( process.cwd(), req.url + ".js" ) )
+        res.sendFile( Path.join( process.cwd(), req.url ) )
     } )
 
-    app.get( "/modules/*", function ( req, res ) {
+    app.get( "/scripts/*", function ( req, res ) {
         const source_file = Path.join( process.cwd(), config.root, req.url + ".ts" )
         FS.readFile( source_file, "utf8", function ( err, file ) {
             if ( err ) res.send( err )
@@ -51,11 +45,26 @@ export const run = function ( config ) {
                 fileName: source_file
             } )
             res.header( { "content-type": "application/javascript" } )
-            res.send( result.outputText.replace( /from \"([a-zA-Z_\-\/]*)\"/g, function ( match, p1 ) {
-                return (p1[ 0 ] === "." || p1[ 0 ] === "/")
-                    ? p1
-                    : `from "${ getESModuleIndex( p1 ) }"`
+
+            const changeCase = s => s.split( "-" ).map( w => w[ 0 ].toUpperCase() + w.slice( 1 ) ).join( "" )
+            const import_regex = /import (.*) from "([a-zA-Z\-]*)"/g
+
+            res.send( result.outputText.replace( import_regex, function ( match, p1, p2 ) {
+                return `const ${p1} = ${changeCase( p2 )}`
             } ) )
+
+        } )
+    } )
+
+    app.get( "/styles/*", function ( req, res ) {
+        const source_file = Path.join( process.cwd(), config.root, req.url )
+        Styles.stream( {
+            name: "",
+            input: source_file,
+            output: ""
+        } ).then( function ( css ) {
+            res.header( { "content-type": "text/css" } )
+            res.send( css )
         } )
     } )
 

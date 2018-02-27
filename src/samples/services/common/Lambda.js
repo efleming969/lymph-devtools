@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseApiGatewayRequest = function (request) {
+    return {
+        name: request.pathParameters.proxy,
+        data: JSON.parse(request.body),
+        headers: request.headers
+    };
+};
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiTGFtYmRhLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiTGFtYmRhLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQWEsUUFBQSxzQkFBc0IsR0FBRyxVQUFVLE9BQU87SUFDbkQsTUFBTSxDQUFDO1FBQ0gsSUFBSSxFQUFFLE9BQU8sQ0FBQyxjQUFjLENBQUMsS0FBSztRQUNsQyxJQUFJLEVBQUUsSUFBSSxDQUFDLEtBQUssQ0FBRSxPQUFPLENBQUMsSUFBSSxDQUFFO1FBQ2hDLE9BQU8sRUFBRSxPQUFPLENBQUMsT0FBTztLQUMzQixDQUFBO0FBQ0wsQ0FBQyxDQUFBIiwic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0IGNvbnN0IHBhcnNlQXBpR2F0ZXdheVJlcXVlc3QgPSBmdW5jdGlvbiggcmVxdWVzdCApIHtcbiAgICByZXR1cm4ge1xuICAgICAgICBuYW1lOiByZXF1ZXN0LnBhdGhQYXJhbWV0ZXJzLnByb3h5LFxuICAgICAgICBkYXRhOiBKU09OLnBhcnNlKCByZXF1ZXN0LmJvZHkgKSxcbiAgICAgICAgaGVhZGVyczogcmVxdWVzdC5oZWFkZXJzXG4gICAgfVxufVxuIl19

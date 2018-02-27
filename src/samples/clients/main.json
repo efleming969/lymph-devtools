@@ -1,0 +1,15 @@
+{
+  "title": "Main",
+  "styles": [
+    "/styles/Main.css"
+  ],
+  "scripts": {
+    "lymph-client": {
+      "local": "/node_modules/lymph-client/lib/lymph-client.js",
+      "remote": ""
+    }
+  },
+  "modules": [
+    "/scripts/Main"
+  ]
+}

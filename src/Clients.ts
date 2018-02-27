@@ -6,7 +6,7 @@ import * as Mime from "mime"
 
 import * as Scripts from "./Scripts"
 import * as Styles from "./Styles"
-import * as Templates from "./Template"
+import * as Templates from "./Templates"
 
 const cwd = process.cwd()
 
@@ -15,52 +15,51 @@ type Config = {
     target: string
 }
 
-export const config = function ( source: string, target: string ) {
+export const configure = function ( source: string, target: string ) {
     return Promise.resolve( { source, target } )
 }
 
+const mapToPromises = fn => list => Promise.all( list.map( fn ) )
+
 export const buildTemplates = function ( config: Config ) {
-    return Templates.buildTemplates( config.source, config.target )
+    return Templates.detect( config.source, config.target )
+        .then( mapToPromises( Templates.compile ) )
         .then( () => config )
 }
 
 export const buildScripts = function ( config: Config ) {
-    return Scripts.detectModules( config.source, config.target )
+    return Scripts.detect( config.source, config.target )
         .then( Scripts.compile )
         .then( Scripts.bundle )
         .then( () => config )
 }
 
 export const buildStyles = function ( config: Config ) {
-    return Styles.detectStyles( config.source, config.target )
+    return Styles.detect( config.source, config.target )
         .then( Styles.compile )
         .then( () => config )
 }
 
-export const buildImages = function ( config: Config ) {
-    console.log( "copying images", config )
+export const buildStatics = function ( config: Config ) {
+    const source_dir = Path.join( config.source, "statics" )
+    const target_dir = Path.join( config.target, "statics" )
 
-    return FS.copy(
-        Path.join( config.source, "images" ),
-        Path.join( config.target, "images" ) ).then( () => config )
+    return FS.copy( source_dir, target_dir )
+        .then( () => config )
 }
 
-export const deploy = function ( config: Config ) {
-    console.log( "deploying clients" )
+export const deploy = function ( source: string, target: string, region: string ) {
+    const s3 = new AWS.S3( { region } )
 
-    const s3 = new AWS.S3( { region: "us-east-1" } )
-    const namespace = "braintrustops"
-
-    return Glob( config.target ).then( function ( files ) {
+    return Glob( source ).then( function ( files ) {
         return Promise.all( files.map( function ( file ) {
             return FS.readFile( file ).then( function ( buffer ) {
                 const put_config = {
                     Body: buffer,
-                    Bucket: namespace,
-                    Key: file.replace( "build/", "" ),
+                    Bucket: target,
+                    Key: file.replace( source + "/", "" ),
                     ContentType: Mime.getType( file )
                 }
-
                 return s3.putObject( put_config ).promise()
             } )
         } ) )

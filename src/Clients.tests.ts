@@ -10,39 +10,29 @@ const sample_target = Path.join( cwd, "build", "clients" )
 
 const config = { source: sample_source, target: sample_target }
 
-const removeAllJSFiles = function () {
-    const js_pattern = Path.join( sample_source, "**", "*.js" )
-
-    return glob( js_pattern ).then( function ( js_files ) {
-        return Promise.all( js_files.map( f => FS.remove( f ) ) )
-    } )
-}
-
 const removeBuildDirectory = function () {
     return FS.remove( sample_target )
 }
 
-describe( "scripts", function () {
+describe( "building client scripts", function () {
+
+    const removeAllJSFiles = function () {
+        const js_pattern = Path.join( sample_source, "**", "*.js" )
+
+        return glob( js_pattern ).then( function ( js_files ) {
+            return Promise.all( js_files.map( f => FS.remove( f ) ) )
+        } )
+    }
 
     afterAll( function () {
         return removeAllJSFiles().then( removeBuildDirectory )
     } )
 
-    it( "should pass on the list of modules", function () {
-        return Clients.buildScripts( config ).then( function ( modules ) {
-            expect( modules ).toEqual( [ {
-                name: "Main",
-                script: Path.join( sample_source, "scripts", "Main.ts" ),
-                bundle: Path.join( sample_target, "scripts", "Main.js" )
-            } ] )
-        } )
-    } )
-
-    it( "should compile module and all dependant scripts", function () {
+    it( "should compile scripts to source directory", function () {
         return Clients.buildScripts( config ).then( function () {
             return glob( "src/**/*.js" ).then( function ( files: string[] ) {
                 const scripts_dir = Path.join( "src", "samples", "clients", "scripts" )
-                expect( files ).toEqual( [
+                expect( files.sort() ).toEqual( [
                     Path.join( scripts_dir, "/GreetingBuilder.js" ),
                     Path.join( scripts_dir, "/Main.js" ),
                     Path.join( scripts_dir, "/Simple.js" )
@@ -51,37 +41,68 @@ describe( "scripts", function () {
         } )
     } )
 
-    test( "should produce a single bundle for each module in the build dir", function () {
+    it( "should create bundles in build directory", function () {
         return Clients.buildScripts( config ).then( function () {
             return glob( "build/**/*.js" ).then( function ( files: string[] ) {
                 expect( files ).toEqual( [ "build/clients/scripts/Main.js" ] )
             } )
         } )
     } )
+
 } )
 
-describe( "styles", function () {
+describe( "building client styles", function () {
 
     afterAll( function () {
-        return removeAllJSFiles().then( removeBuildDirectory )
+        return removeBuildDirectory()
     } )
 
-    it( "should create a list of styles", function () {
-        return Clients.buildStyles( config ).then( function ( modules ) {
-            expect( modules ).toEqual( [
-                {
-                    name: "General",
-                    input: Path.join( sample_source, "styles", "General.css" ),
-                    output: Path.join( sample_target, "styles", "General.css" )
-
-                },
-                {
-                    name: "Main",
-                    input: Path.join( sample_source, "styles", "Main.css" ),
-                    output: Path.join( sample_target, "styles", "Main.css" )
-
-                }
-            ] )
+    it( "should compile styles to build directory", function () {
+        return Clients.buildStyles( config ).then( function () {
+            return glob( "build/**/*.css" ).then( function ( files: string[] ) {
+                expect( files.sort() ).toEqual( [
+                    "build/clients/styles/General.css",
+                    "build/clients/styles/Main.css"
+                ] )
+            } )
         } )
     } )
+
 } )
+
+describe( "building client templates", function () {
+
+    afterAll( function () {
+        return removeBuildDirectory()
+    } )
+
+    it( "should compile templates to build directory", function () {
+        return Clients.buildTemplates( config ).then( function () {
+            return glob( "build/**/*.html" ).then( function ( files: string[] ) {
+                expect( files.sort() ).toEqual( [
+                    "build/clients/Main.html",
+                ] )
+            } )
+        } )
+    } )
+
+} )
+
+describe( "building client static files", function () {
+
+    afterAll( function () {
+        return removeBuildDirectory()
+    } )
+
+    it( "should copy all static files to build directory", function () {
+        return Clients.buildStatics( config )
+            .then( () => glob( "build/clients/statics" ) )
+            .then( function ( files: string[] ) {
+                expect( files.sort() ).toEqual( [
+                    "build/clients/statics/nodejs-logo.png",
+                ] )
+            } )
+    } )
+
+} )
+

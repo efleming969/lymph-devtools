@@ -1,13 +1,13 @@
 {
   "name": "lymph-devtools",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "tools for working with 'rich' client applications",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc --project tsconfig.json"
   },
   "bin": {
-    "lymph-build": "./bin/build.js"
+    "lymph-devtools": "./bin/build.js"
   },
   "author": "",
   "license": "ISC",
@@ -31,7 +31,8 @@
     "@types/jest": "^22.1.3",
     "@types/node": "^9.4.0",
     "jest": "^22.4.0",
-    "lymph-client": "^0.14.1"
+    "lymph-client": "^0.14.1",
+    "source-map-support": "^0.5.3"
   },
   "jest": {
     "moduleFileExtensions": [
