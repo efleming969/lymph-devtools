@@ -1,6 +1,5 @@
 import * as Typescript from "typescript"
 import * as Path from "path"
-import * as FS from "fs-extra"
 import * as Glob from "globby"
 import * as Rollup from "rollup"
 import * as RollupUglify from "rollup-plugin-uglify"

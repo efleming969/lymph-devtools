@@ -22,8 +22,9 @@ export const configure = function ( source: string, target: string ) {
 const mapToPromises = fn => list => Promise.all( list.map( fn ) )
 
 export const buildTemplates = function ( config: Config ) {
-    return Templates.detect( config.source, config.target )
-        .then( mapToPromises( Templates.compile ) )
+    return Templates.detect( config.source )
+        .then( mapToPromises( Templates.render ) )
+        .then( rendered_template => FS.writeFile() )
         .then( () => config )
 }
 
@@ -58,7 +59,7 @@ export const deploy = function ( source: string, target: string, region: string 
                     Body: buffer,
                     Bucket: target,
                     Key: file.replace( source + "/", "" ),
-                    ContentType: Mime.getType( file )
+                    ContentType: Mime.getType( file ) // content-type is needed since S3 is bad at guessing mime types
                 }
                 return s3.putObject( put_config ).promise()
             } )

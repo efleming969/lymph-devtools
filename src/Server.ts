@@ -6,9 +6,11 @@ import * as Path from "path"
 import * as Templates from "./Templates"
 import * as Styles from "./Styles"
 
-const createPathFromRoot = root => function ( base_name: string ) {
-    return Path.join( process.cwd(), root, base_name )
-}
+const createPathFromRoot = root => base_name =>
+    Path.join( process.cwd(), root, base_name )
+
+const changeCase = s =>
+    s.split( "-" ).map( w => w[ 0 ].toUpperCase() + w.slice( 1 ) ).join( "" )
 
 export const run = function ( config ) {
 
@@ -33,7 +35,9 @@ export const run = function ( config ) {
     } )
 
     app.get( "/scripts/*", function ( req, res ) {
-        const source_file = Path.join( process.cwd(), config.root, req.url + ".ts" )
+        const source_file = pathFromRoot( req.url + ".ts" )
+        const import_regex = /import (.*) from "([a-zA-Z\-]*)"/g
+
         FS.readFile( source_file, "utf8", function ( err, file ) {
             if ( err ) res.send( err )
             const result = Typescript.transpileModule( file, {
@@ -46,11 +50,8 @@ export const run = function ( config ) {
             } )
             res.header( { "content-type": "application/javascript" } )
 
-            const changeCase = s => s.split( "-" ).map( w => w[ 0 ].toUpperCase() + w.slice( 1 ) ).join( "" )
-            const import_regex = /import (.*) from "([a-zA-Z\-]*)"/g
-
             res.send( result.outputText.replace( import_regex, function ( match, p1, p2 ) {
-                return `const ${p1} = ${changeCase( p2 )}`
+                return `const ${ p1 } = ${ changeCase( p2 ) }`
             } ) )
 
         } )

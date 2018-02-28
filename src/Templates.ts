@@ -2,6 +2,23 @@ import * as FS from "fs-extra"
 import * as Path from "path"
 import * as Glob from "globby"
 
+import { multiline } from "./Utils"
+
+export type TemplateScript = {
+    name: string,
+    local: string,
+    remote: string
+}
+
+export type TemplateConfig = {
+    name: string,
+    dev: boolean,
+    title: string,
+    styles: string[],
+    scripts: TemplateScript[],
+    modules: string[]
+}
+
 export type Template = {
     source: string,
     target: string
@@ -19,70 +36,51 @@ const mapObject = function ( fn, object ) {
     return Object.keys( object ).map( key => fn( key, object[ key ] ) )
 }
 
-const renderStyle = style => `
-    <link rel="stylesheet" href="${style}">
-`
+const renderStyle = style => `<link rel="stylesheet" href="${style}">`
 
 const renderModule = is_dev => function ( path ) {
     const type = is_dev ? "module" : "application/javascript"
     return `<script type="${type}" src="${path}"></script>`
 }
 
-const renderScript = is_dev => function ( name, paths ) {
-    const path = is_dev ? paths.local : paths.remote
+const renderScript = is_dev => function ( script: TemplateScript ) {
+    const path = is_dev ? script.local : script.remote
     return `<script type="application/javascript" src="${path}"></script>`
 }
 
-export const render = function ( config ) {
-    return `
-<!DOCTYPE html>
+export const render = function ( config: TemplateConfig ) {
+    return multiline`
+        | <!DOCTYPE html>
 
-<html lang="en">
+        | <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${config.title}</title>
-    
-    ${ config.styles.map( renderStyle ).join( "" ) }
-    ${ mapObject( renderScript( config.dev ), config.scripts ).join( "" )}
-    ${ config.modules.map( renderModule( config.dev ) ).join( "" )}
-</head>
+        | <head>
+        |     <meta charset="UTF-8">
+        |     <meta http-equiv="x-ua-compatible" content="ie=edge">
+        |     <meta name="viewport" content="width=device-width, initial-scale=1">
+        |     <title>${config.title}</title>
 
-<body></body>
+        |     ${ config.styles.map( renderStyle ).join( "" ) }
 
-</html>
+        |     ${ config.scripts.map( renderScript( config.dev ) ).join( "" )}
+        |     ${ config.modules.map( renderModule( config.dev ) ).join( "" )}
+        | </head>
+
+        | <body></body>
+
+        | </html>
     `
 }
 
-export const renderOld = function ( template_string: string, context: any ) {
-    return template_string.replace( /@([a-zA-Z\.]*)\((.*)\)/g, function ( _, name, args ) {
-        try {
-            const fn = `return helpers.${ name }( ctx, ${ args })`
-            return new Function( "helpers", "ctx", fn ).apply( null, [ helpers, context ] )
-        } catch ( e ) {
-            return ''
-        }
+export const detect = function ( source_dir: string ): Promise<TemplateConfig[]> {
+    const config_file_pattern = Path.join( source_dir, "*.json" )
+
+    return Glob( config_file_pattern ).then( function ( config_file_paths ) {
+        const readFilePromises = config_file_paths.map( function ( config_file_path ) {
+            return FS.readFile( config_file_path, "utf8" )
+                .then( config_string => JSON.parse( config_string ) as TemplateConfig )
+        } )
+
+        return Promise.all( readFilePromises )
     } )
-}
-
-export const compile = function ( template: Template ) {
-    return FS.readFile( template.source, "utf8" )
-        .then( template_string => renderOld( template_string, { dev: false } ) )
-        .then( compiled_template => FS.writeFile( template.target, compiled_template, "utf8" ) )
-}
-
-const file2Template = ( target: string ) => function ( file: string ): Template {
-    return {
-        source: file, target: Path.join( target, Path.basename( file ) )
-    }
-}
-
-export const detect = function ( source: string, target: string ): Promise<Template[]> {
-    const html_files_pattern = Path.join( source, "**", "*.html" )
-
-    return FS.ensureDir( target )
-        .then( () => Glob( html_files_pattern ) )
-        .then( files => files.map( file2Template( target ) ) )
 }
