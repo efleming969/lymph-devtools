@@ -16,3 +16,7 @@ export const multiline = function( strings, ...args ) {
         }
     }, '' ).replace( whitespace, '' ).replace( find_indent, '$1' )
 }
+
+export const mapObject = function ( fn, object ) {
+    return Object.keys( object ).map( key => fn( key, object[ key ] ) )
+}

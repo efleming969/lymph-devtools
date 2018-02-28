@@ -24,18 +24,6 @@ export type Template = {
     target: string
 }
 
-const helpers = {
-    module: function ( ctx, module_uri ) {
-        const type = ctx.dev ? "module" : "application/javascript"
-        const src = ctx.dev ? module_uri : module_uri + ".js"
-        return `<script type="${type}" src="${src}"></script>`
-    }
-}
-
-const mapObject = function ( fn, object ) {
-    return Object.keys( object ).map( key => fn( key, object[ key ] ) )
-}
-
 const renderStyle = style => `<link rel="stylesheet" href="${style}">`
 
 const renderModule = is_dev => function ( path ) {
