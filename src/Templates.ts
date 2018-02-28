@@ -11,8 +11,6 @@ export type TemplateScript = {
 }
 
 export type TemplateConfig = {
-    name: string,
-    dev: boolean,
     title: string,
     styles: string[],
     scripts: TemplateScript[],
@@ -20,8 +18,10 @@ export type TemplateConfig = {
 }
 
 export type Template = {
-    source: string,
-    target: string
+    name: string,
+    config: TemplateConfig,
+    text: string,
+    dev: boolean
 }
 
 const renderStyle = style => `<link rel="stylesheet" href="${style}">`
@@ -36,8 +36,10 @@ const renderScript = is_dev => function ( script: TemplateScript ) {
     return `<script type="application/javascript" src="${path}"></script>`
 }
 
-export const render = function ( config: TemplateConfig ) {
-    return multiline`
+export const render = function ( template: Template ) {
+    const { name, config, dev } = template
+
+    const text = multiline`
         | <!DOCTYPE html>
 
         | <html lang="en">
@@ -50,25 +52,35 @@ export const render = function ( config: TemplateConfig ) {
 
         |     ${ config.styles.map( renderStyle ).join( "" ) }
 
-        |     ${ config.scripts.map( renderScript( config.dev ) ).join( "" )}
-        |     ${ config.modules.map( renderModule( config.dev ) ).join( "" )}
+        |     ${ config.scripts.map( renderScript( dev ) ).join( "" )}
+        |     ${ config.modules.map( renderModule( dev ) ).join( "" )}
         | </head>
 
         | <body></body>
 
         | </html>
     `
+
+    return { name, dev, config, text }
 }
 
-export const detect = function ( source_dir: string ): Promise<TemplateConfig[]> {
+export const detect = function ( source_dir: string ): Promise<Template[]> {
     const config_file_pattern = Path.join( source_dir, "*.json" )
 
-    return Glob( config_file_pattern ).then( function ( config_file_paths ) {
-        const readFilePromises = config_file_paths.map( function ( config_file_path ) {
-            return FS.readFile( config_file_path, "utf8" )
-                .then( config_string => JSON.parse( config_string ) as TemplateConfig )
-        } )
+    const parseToTemplateConfig = config_string => JSON.parse( config_string ) as TemplateConfig
 
-        return Promise.all( readFilePromises )
-    } )
+    return Glob( config_file_pattern ).then( function ( config_file_paths ) {
+        return config_file_paths.map( function ( config_file_path ) {
+            const name = Path.basename( config_file_path, ".json" )
+            return FS.readFile( config_file_path, "utf8" )
+                .then( parseToTemplateConfig )
+                .then( config => ({ name, config, text: "" }) )
+        } )
+    } ).then( parse_config_promises => Promise.all( parse_config_promises ) )
+}
+
+export const write = ( target: string ) => function ( template: Template ): Promise<void> {
+    const file_name = Path.join( target, template.name + ".html" )
+    return FS.ensureDir( target )
+        .then( () => FS.writeFile( file_name, template.text, "utf8" ) )
 }

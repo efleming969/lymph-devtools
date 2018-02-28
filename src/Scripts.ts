@@ -1,6 +1,7 @@
 import * as Typescript from "typescript"
 import * as Path from "path"
 import * as Glob from "globby"
+import * as FS from "fs-extra"
 import * as Rollup from "rollup"
 import * as RollupUglify from "rollup-plugin-uglify"
 
@@ -74,13 +75,15 @@ export const bundle = function ( modules: Script[] ) {
     } ) ).then( () => modules )
 }
 
-export const detect = function ( source: string, target: string ) {
-    const html_files_pattern = Path.join( source, "**", "*.html" )
+export const detect = function ( source_dir: string, target_dir: string ): Promise<Script[]> {
+    const config_file_pattern = Path.join( source_dir, "*.json" )
 
-    return Glob( html_files_pattern ).then( files => files.map( function ( f ) {
-        const name = Path.basename( f, ".html" )
-        const script = Path.join( source, "scripts", name + ".ts" )
-        const bundle = Path.join( target, "scripts", name + ".js" )
-        return { name, script, bundle }
-    } ) )
+    return Glob( config_file_pattern ).then( function ( config_file_paths ) {
+        return config_file_paths.map( function ( config_file_path ) {
+            const name = Path.basename( config_file_path, ".json" )
+            const script = Path.join( source_dir, "scripts", name + ".ts" )
+            const bundle = Path.join( target_dir, "scripts", name + ".js" )
+            return { name, bundle, script }
+        } )
+    } ).then( parse_config_promises => Promise.all( parse_config_promises ) )
 }
