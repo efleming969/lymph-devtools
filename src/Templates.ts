@@ -28,7 +28,8 @@ const renderStyle = style => `<link rel="stylesheet" href="${style}">`
 
 const renderModule = is_dev => function ( path ) {
     const type = is_dev ? "module" : "application/javascript"
-    return `<script type="${type}" src="${path}"></script>`
+    const src = path + (is_dev ? "" : ".js")
+    return `<script type="${type}" src="${src}"></script>`
 }
 
 const renderScript = is_dev => function ( script: TemplateScript ) {
@@ -62,6 +63,13 @@ export const render = function ( template: Template ) {
     `
 
     return { name, dev, config, text }
+}
+
+export const read = function ( config_file_path: string ): Promise<Template> {
+    const name = Path.basename( config_file_path, ".json" )
+    return FS.readFile( config_file_path, "utf8" )
+        .then( config_string => JSON.parse( config_string ) as TemplateConfig )
+        .then( config => ({ name, config, text: "" }) )
 }
 
 export const detect = function ( source_dir: string ): Promise<Template[]> {

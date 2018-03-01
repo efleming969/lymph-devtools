@@ -7,7 +7,7 @@
     {
       "name": "lymph-client",
       "local": "/node_modules/lymph-client/lib/lymph-client.js",
-      "remote": ""
+      "remote": "https://cdn.jsdelivr.net/npm/lymph-client@0.20.0/lib/lymph-client.js"
     }
   ],
   "modules": [

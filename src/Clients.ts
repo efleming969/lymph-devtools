@@ -12,11 +12,11 @@ type Config = {
     source: string,
     target: string
 }
-//
-// export const configure = function ( source: string, target: string ) {
-//     return Promise.resolve( { source, target } )
-// }
-//
+
+export const configure = function ( source: string, target: string ) {
+    return Promise.resolve( { source, target } )
+}
+
 const mapToPromises = fn => list => Promise.all( list.map( fn ) )
 
 const logit = it => console.log( it )

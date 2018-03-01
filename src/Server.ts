@@ -23,11 +23,10 @@ export const run = function ( config ) {
 
         res.header( "content-type", "text/html" )
 
-        FS.readFile( module_config_path, "utf8" )
-            .then( raw_config => JSON.parse( raw_config ) )
-            .then( config => Object.assign( {}, config, { dev: true } ) )
+        Templates.read( module_config_path )
+            .then( template => Object.assign( {}, template, { dev: true } ) )
             .then( Templates.render )
-            .then( template => res.send( template ) )
+            .then( template => res.send( template.text ) )
     } )
 
     app.get( "/node_modules/*", function ( req, res ) {
