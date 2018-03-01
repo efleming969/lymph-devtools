@@ -1,6 +1,7 @@
+import { Utils, HTML } from "lymph-client"
+
 import GreetingBuilder from "./GreetingBuilder"
 import Simple from "./Simple"
-import { Utils } from "lymph-client"
 
 const builder = new GreetingBuilder()
 
@@ -14,4 +15,4 @@ const simple = new Simple( "joe" )
 
 simple.printTo( console )
 
-// console.log( HTML )
+console.log( HTML )
