@@ -1,13 +1,19 @@
+import { S3 } from "aws-sdk"
 import { parseApiGatewayRequest } from "./common/Lambda"
 
 export const handler = function ( api_gateway_request, context, sendBackToGateway ) {
     const request = parseApiGatewayRequest( api_gateway_request )
 
-    console.log( request )
+    const s3 = new S3( { region: "us-east-1" } )
 
-    const statusCode = 200
-    const body = JSON.stringify( { text: "hello, world" } )
-    const headers = {}
+    s3.listBuckets( function ( error, data ) {
+        console.log( data )
+        console.log( request )
 
-    sendBackToGateway( null, { statusCode, body, headers } )
+        const statusCode = 200
+        const body = JSON.stringify( { text: "hello, world" } )
+        const headers = {}
+
+        sendBackToGateway( null, { statusCode, body, headers } )
+    } )
 }

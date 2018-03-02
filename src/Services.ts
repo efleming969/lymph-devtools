@@ -1,108 +1,129 @@
-import { execFile } from "child_process"
 import { Lambda, S3 } from "aws-sdk"
 
-const FS = require( "fs" )
-const Path = require( "path" )
-const Archiver = require( "archiver" )
+import * as Typescript from "typescript"
+import * as Glob from "globby"
+import * as FS from "fs-extra"
+import * as Path from "path"
+import * as Archiver from "archiver"
 
-const cwd = process.cwd()
-const npm_bin = Path.join( cwd, "node_modules", ".bin" )
-
-export const zipModule = config => function ( module_file ) {
-    const module_name = module_file.replace( ".ts", "" )
-    const archive = Archiver( "zip" )
-    const artifact_file = `${ config.namespace }--${ module_name }.zip`
-
-    return new Promise( function ( resolve, reject ) {
-        const output = FS.createWriteStream(
-            Path.join( cwd, config.buildDir, artifact_file ) )
-
-        archive.on( "error", function ( err ) {
-            reject( err )
-        } )
-
-        output.on( "close", function () {
-            resolve( module_name )
-        } )
-
-        archive.directory( Path.join( cwd, config.buildDir, module_name ), "" )
-
-        archive.pipe( output )
-        archive.finalize()
-    } )
+export type BundleConfig = {
+    namespace: string,
+    buildDir: string
+    sourceDir: string,
+    region: string
 }
 
-export const uploadFunction = config => function ( module_file ) {
-    const module_name = module_file.replace( ".ts", "" )
-    const s3 = new S3( { region: config.region } )
-    const function_name = `${ config.namespace }--${ module_name }`
+export const uploadFunction = function ( config: BundleConfig, services: string[] ) {
+    return Promise.all( services.map( function ( service_file ) {
+        const module_name = Path.basename( service_file, ".ts" )
+        const s3 = new S3( { region: config.region } )
+        const bundle_name = `${ config.namespace }--${ module_name }`
 
-    return new Promise( function ( res, rej ) {
-        FS.readFile( `${ config.buildDir }/${ function_name }.zip`, function ( e, buffer ) {
-
-            const put_config = {
-                Body: buffer,
-                Bucket: `${ config.namespace }-artifacts`,
-                Key: `${ function_name }.zip`
-            }
-
-            return s3.putObject( put_config, function ( e, data ) {
-                if ( e ) rej( e )
-                res( module_file )
-            } )
-        } )
-    } )
+        FS.readFile( `${ config.buildDir }/${ bundle_name }.zip` )
+            .then( function ( buffer ) {
+                return {
+                    Body: buffer,
+                    Bucket: `${ config.namespace }-artifacts`,
+                    Key: `${ bundle_name }.zip`
+                }
+            } ).then( put_config => s3.putObject( put_config ).promise() )
+    } ) )
 }
 
-export const updateFunction = config => function ( module_file ) {
-    const module_name = module_file.replace( ".ts", "" )
-    const lambda = new Lambda( { region: config.region } )
-    const function_name = `${ config.namespace }--${ module_name }`
+export const updateFunction = function ( config: BundleConfig, services: string[] ) {
+    return Promise.all( services.map( function ( service_file ) {
+        const module_name = Path.basename( service_file, ".ts" )
+        const lambda = new Lambda( { region: config.region } )
+        const function_name = `${ config.namespace }--${ module_name }`
 
-    return new Promise( function ( res, rej ) {
         const update_config = {
             FunctionName: function_name,
             S3Bucket: `${ config.namespace }-artifacts`,
             S3Key: `${ function_name }.zip`
         }
 
-        lambda.updateFunctionCode( update_config, function ( e, data ) {
-            if ( e ) rej( e )
-            res( data )
-        } )
-    } )
+        return lambda.updateFunctionCode( update_config ).promise()
+    } ) )
 }
 
-export const compileModule = config => function ( module_file ) {
-    const module_name = module_file.replace( ".ts", "" )
-
-    const build_dir = Path.join( cwd, config.buildDir, module_name )
-    const index_file = Path.join( cwd, config.sourceDir, module_file )
-    const tsc_options = [ "--outDir", build_dir, index_file ]
-
-    return new Promise( function ( res, rej ) {
-        execFile( Path.join( npm_bin, "tsc" ), tsc_options, function ( err, stdout, stderr ) {
-            if ( err ) rej( err )
-            res( module_file )
-        } )
-    } )
+export const detect = function ( config: BundleConfig ): Promise<string[]> {
+    return Glob( Path.join( config.sourceDir, "*.ts" ) )
 }
 
-export const getModules = config => new Promise( function ( res, rej ) {
-    FS.readdir( config.sourceDir, function ( e, files ) {
-        if ( e ) rej( e )
-        res( files.filter( f => f.endsWith( ".ts" ) ) )
-    } )
-} )
+export const compile = function ( config: BundleConfig, services: string[] ): Promise<any> {
+    return Promise.all( services.map( function ( service_file ) {
+        const service_name = Path.basename( service_file, ".ts" )
 
-const promiseAll = fn => list => Promise.all( list.map( fn ) )
+        const compile_options = {
+            noEmitOnError: true,
+            noImplicitAny: false,
+            target: Typescript.ScriptTarget.ES2015,
+            module: Typescript.ModuleKind.CommonJS,
+            moduleResolution: Typescript.ModuleResolutionKind.NodeJs,
+            inlineSourceMap: false,
+            inlineSources: false,
+            outDir: Path.join( config.buildDir, service_name )
+        }
+
+        const program = Typescript.createProgram( [ service_file ], compile_options )
+
+        return new Promise( function ( resolve, reject ) {
+            const emitResult = program.emit()
+
+            const allDiagnostics = Typescript.getPreEmitDiagnostics( program )
+                .concat( emitResult.diagnostics )
+
+            const results = allDiagnostics.map( function ( diagnostic ) {
+                if ( diagnostic.file ) {
+                    let { line, character } =
+                        diagnostic.file.getLineAndCharacterOfPosition( diagnostic.start )
+
+                    let message =
+                        Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )
+
+                    return `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`
+                }
+                else {
+                    return `${Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )}`
+                }
+            } )
+
+            results.length > 0 ? reject( results ) : resolve()
+        } )
+    } ) )
+}
+
+export const bundle = function ( config: BundleConfig, services: string[] ): Promise<any> {
+    return Promise.all( services.map( function ( service_file ) {
+        const bundle_name = Path.basename( service_file, ".ts" )
+        const archive = Archiver( "zip" )
+        const artifact_file = `${ config.namespace }--${ bundle_name }.zip`
+
+        return new Promise( function ( resolve, reject ) {
+            const output = FS.createWriteStream(
+                Path.join( config.buildDir, artifact_file ) )
+
+            archive.on( "error", function ( err ) {
+                reject( err )
+            } )
+
+            output.on( "close", function () {
+                resolve( bundle_name )
+            } )
+
+            archive.directory( Path.join( config.buildDir, bundle_name ), "" )
+
+            archive.pipe( output )
+            archive.finalize()
+        } )
+    } ) )
+}
 
 export const build = function ( config ) {
-    return getModules( config )
-        .then( promiseAll( compileModule( config ) ) )
-        .then( promiseAll( zipModule( config ) ) )
-        .then( promiseAll( uploadFunction( config ) ) )
-        .then( promiseAll( updateFunction( config ) ) )
+    return detect( config )
+    // .then( promiseAll( zipModule( config ) ) )
+    // .then( promiseAll( uploadFunction( config ) ) )
+    // .then( promiseAll( updateFunction( config ) ) )
         .then( output => console.dir( output ) )
         .catch( e => console.log( e ) )
 }

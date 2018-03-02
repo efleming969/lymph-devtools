@@ -1,0 +1,473 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Lambda and API Gateway",
+  "Resources": {
+    "CreateUserCLOUDFORM": {
+      "DependsOn": "LambdaRole",
+      "Properties": {
+        "Code": {
+          "ZipFile": ""
+        },
+        "FunctionName": "CreateUserCLOUDFORM",
+        "Handler": "index.lambda_handler",
+        "Role": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:iam::",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":role/",
+              {
+                "Ref": "LambdaRole"
+              }
+            ]
+          ]
+        },
+        "Runtime": "python2.7"
+      },
+      "Type": "AWS::Lambda::Function"
+    },
+    "DB": {
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "UserId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "UserId",
+            "KeyType": "HASH"
+          }
+        ],
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": "1",
+          "WriteCapacityUnits": "1"
+        },
+        "TableName": "PickPocketDB"
+      },
+      "Type": "AWS::DynamoDB::Table"
+    },
+    "FetchUsersCLOUDFORM": {
+      "DependsOn": "LambdaRole",
+      "Properties": {
+        "Code": {
+          "ZipFile": ""
+        },
+        "FunctionName": "FetchUsersCLOUDFORM",
+        "Handler": "index.lambda_handler",
+        "Role": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:iam::",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":role/",
+              {
+                "Ref": "LambdaRole"
+              }
+            ]
+          ]
+        },
+        "Runtime": "python2.7"
+      },
+      "Type": "AWS::Lambda::Function"
+    },
+    "LambdaRole": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "sts:AssumeRole"
+              ],
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "*"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Path": "/",
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "dynamodb:*",
+                    "cloudwatch:DeleteAlarms",
+                    "cloudwatch:DescribeAlarmHistory",
+                    "cloudwatch:DescribeAlarms",
+                    "cloudwatch:DescribeAlarmsForMetric",
+                    "cloudwatch:GetMetricStatistics",
+                    "cloudwatch:ListMetrics",
+                    "cloudwatch:PutMetricAlarm",
+                    "datapipeline:ActivatePipeline",
+                    "datapipeline:CreatePipeline",
+                    "datapipeline:DeletePipeline",
+                    "datapipeline:DescribeObjects",
+                    "datapipeline:DescribePipelines",
+                    "datapipeline:GetPipelineDefinition",
+                    "datapipeline:ListPipelines",
+                    "datapipeline:PutPipelineDefinition",
+                    "datapipeline:QueryObjects",
+                    "iam:ListRoles",
+                    "sns:CreateTopic",
+                    "sns:DeleteTopic",
+                    "sns:ListSubscriptions",
+                    "sns:ListSubscriptionsByTopic",
+                    "sns:ListTopics",
+                    "sns:Subscribe",
+                    "sns:Unsubscribe",
+                    "sns:SetTopicAttributes",
+                    "lambda:CreateFunction",
+                    "lambda:ListFunctions",
+                    "lambda:ListEventSourceMappings",
+                    "lambda:CreateEventSourceMapping",
+                    "lambda:DeleteEventSourceMapping",
+                    "lambda:GetFunctionConfiguration",
+                    "lambda:DeleteFunction"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                }
+              ],
+              "Version": "2012-10-17"
+            },
+            "PolicyName": "lambdaroleCLOUDFORM"
+          }
+        ]
+      },
+      "Type": "AWS::IAM::Role"
+    },
+    "MethodCreateUserCLOUDFORM": {
+      "DependsOn": [
+        "CreateUserCLOUDFORM",
+        "PermissionCreateUserCLOUDFORM"
+      ],
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "IntegrationResponses": [
+            {
+              "StatusCode": 200
+            }
+          ],
+          "Type": "AWS",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway",
+                ":",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":",
+                "lambda:path/2015-03-31/functions/arn:aws:lambda",
+                ":",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":",
+                {
+                  "Ref": "AWS::AccountId"
+                },
+                ":function:",
+                "CreateUserCLOUDFORM",
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": 200
+          }
+        ],
+        "ResourceId": {
+          "Ref": "Resourceusers"
+        },
+        "RestApiId": {
+          "Ref": "RestApi"
+        }
+      },
+      "Type": "AWS::ApiGateway::Method"
+    },
+    "MethodFetchUsersCLOUDFORM": {
+      "DependsOn": [
+        "FetchUsersCLOUDFORM",
+        "Resourceusers",
+        "PermissionFetchUsersCLOUDFORM"
+      ],
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "IntegrationResponses": [
+            {
+              "StatusCode": 200
+            }
+          ],
+          "Type": "AWS",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway",
+                ":",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":",
+                "lambda:path/2015-03-31/functions/arn:aws:lambda",
+                ":",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":",
+                {
+                  "Ref": "AWS::AccountId"
+                },
+                ":function:",
+                "FetchUsersCLOUDFORM",
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": 200
+          }
+        ],
+        "ResourceId": {
+          "Ref": "Resourceusers"
+        },
+        "RestApiId": {
+          "Ref": "RestApi"
+        }
+      },
+      "Type": "AWS::ApiGateway::Method"
+    },
+    "MethodPickLockCLOUDFORM": {
+      "DependsOn": [
+        "PickLockCLOUDFORM",
+        "Resourcepick",
+        "PermissionPickLockCLOUDFORM"
+      ],
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "IntegrationResponses": [
+            {
+              "StatusCode": 200
+            }
+          ],
+          "Type": "AWS",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway",
+                ":",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":",
+                "lambda:path/2015-03-31/functions/arn:aws:lambda",
+                ":",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":",
+                {
+                  "Ref": "AWS::AccountId"
+                },
+                ":function:",
+                "PickLockCLOUDFORM",
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": [
+          {
+            "StatusCode": 200
+          }
+        ],
+        "ResourceId": {
+          "Ref": "Resourcepick"
+        },
+        "RestApiId": {
+          "Ref": "RestApi"
+        }
+      },
+      "Type": "AWS::ApiGateway::Method"
+    },
+    "PermissionCreateUserCLOUDFORM": {
+      "DependsOn": "CreateUserCLOUDFORM",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": "CreateUserCLOUDFORM",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "RestApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      },
+      "Type": "AWS::Lambda::Permission"
+    },
+    "PermissionFetchUsersCLOUDFORM": {
+      "DependsOn": "FetchUsersCLOUDFORM",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": "FetchUsersCLOUDFORM",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "RestApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      },
+      "Type": "AWS::Lambda::Permission"
+    },
+    "PermissionPickLockCLOUDFORM": {
+      "DependsOn": "PickLockCLOUDFORM",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": "PickLockCLOUDFORM",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "RestApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      },
+      "Type": "AWS::Lambda::Permission"
+    },
+    "PickLockCLOUDFORM": {
+      "DependsOn": "LambdaRole",
+      "Properties": {
+        "Code": {
+          "ZipFile": ""
+        },
+        "FunctionName": "PickLockCLOUDFORM",
+        "Handler": "index.lambda_handler",
+        "Role": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:iam::",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":role/",
+              {
+                "Ref": "LambdaRole"
+              }
+            ]
+          ]
+        },
+        "Runtime": "python2.7"
+      },
+      "Type": "AWS::Lambda::Function"
+    },
+    "Resourcepick": {
+      "DependsOn": "PickLockCLOUDFORM",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "RestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "pick",
+        "RestApiId": {
+          "Ref": "RestApi"
+        }
+      },
+      "Type": "AWS::ApiGateway::Resource"
+    },
+    "Resourceusers": {
+      "DependsOn": "FetchUsersCLOUDFORM",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "RestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "users",
+        "RestApiId": {
+          "Ref": "RestApi"
+        }
+      },
+      "Type": "AWS::ApiGateway::Resource"
+    },
+    "RestApi": {
+      "Properties": {
+        "Name": "TestinThisOut"
+      },
+      "Type": "AWS::ApiGateway::RestApi"
+    }
+  }
+}

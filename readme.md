@@ -85,3 +85,17 @@ aws lambda create-function --function-name "$FUNCTION_NAME" \
 # Backlog
 
 * create build system that can automatically run in CI tool, like Bitbucket Pipelines
+
+# CloudFormation
+
+These are notes on using CloudFormation to create resource for the application
+
+## Creating Stacks
+
+* when creating a stack you may need to provide a list of capabilities for certain types of resource creation
+* in order to create a stack, an authorized identity is required
+
+`arn:aws:lambda:us-east-1:535016723572:function:lymph--hello-queries`
+
+                arn:aws:apigateway:<region>:lambda:path/2015-03-31/functions/arn:aws:lambda:<region>:<account-id>:function:CreateUserCLOUDFORM/invocations
+

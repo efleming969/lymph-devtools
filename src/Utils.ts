@@ -1,4 +1,8 @@
-export const multiline = function( strings, ...args ) {
+import * as Path from "path"
+import * as Glob from "globby"
+import * as FS from "fs-extra"
+
+export const multiline = function ( strings, ...args ) {
 
     const whitespace = /^\s*|\n\s*$/g
     const find_indent = /^[ \t\r]*\| (.*)$/gm
@@ -20,3 +24,19 @@ export const multiline = function( strings, ...args ) {
 export const mapObject = function ( fn, object ) {
     return Object.keys( object ).map( key => fn( key, object[ key ] ) )
 }
+
+export const removeAllJSFiles = ( dir: string ) => function () {
+    const js_pattern = Path.join( dir, "**", "*.js" )
+
+    return Glob( js_pattern ).then( function ( js_files ) {
+        return Promise.all( js_files.map( f => FS.remove( f ) ) )
+    } )
+}
+
+export const selectProps = ( prop_names: string[] ) => function ( original_object: object ) {
+    return prop_names.reduce( function ( obj, key ) {
+        return Object.assign( {}, obj, original_object[ key ] )
+    }, {} )
+}
+
+

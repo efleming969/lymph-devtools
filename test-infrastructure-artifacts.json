@@ -1,0 +1,18 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Artifacts repository for lymph systems",
+  "Resources": {
+    "HelloServiceArtifacts": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "lymph--artifacts"
+      }
+    },
+    "HelloServiceWebsite": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": "lymph"
+      }
+    }
+  }
+}
