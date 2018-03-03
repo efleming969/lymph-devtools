@@ -13,7 +13,7 @@ export type BundleConfig = {
     region: string
 }
 
-export const uploadFunction = function ( config: BundleConfig, services: string[] ) {
+export const uploadFunction = ( config: BundleConfig ) => function ( services: string[] ) {
     return Promise.all( services.map( function ( service_file ) {
         const module_name = Path.basename( service_file, ".ts" )
         const s3 = new S3( { region: config.region } )
@@ -29,10 +29,11 @@ export const uploadFunction = function ( config: BundleConfig, services: string[
                     Key: `${ bundle_name }.zip`
                 }
             } ).then( put_config => s3.putObject( put_config ).promise() )
+            .then( () => service_file )
     } ) )
 }
 
-export const updateFunction = function ( config: BundleConfig, services: string[] ) {
+export const updateFunction = ( config: BundleConfig ) => function ( services: string[] ) {
     return Promise.all( services.map( function ( service_file ) {
         const module_name = Path.basename( service_file, ".ts" )
         const lambda = new Lambda( { region: config.region } )
@@ -46,7 +47,8 @@ export const updateFunction = function ( config: BundleConfig, services: string[
 
         console.log( "updating", function_name, "from", config.namespace )
 
-        return lambda.updateFunctionCode( update_config ).promise()
+        return lambda.updateFunctionCode( update_config )
+            .promise().then( () => service_file )
     } ) )
 }
 
@@ -54,7 +56,7 @@ export const detect = function ( config: BundleConfig ): Promise<string[]> {
     return Glob( Path.join( config.sourceDir, "*.ts" ) )
 }
 
-export const compile = function ( config: BundleConfig, services: string[] ): Promise<any> {
+export const compile = ( config: BundleConfig ) => function ( services: string[] ): Promise<any> {
     return Promise.all( services.map( function ( service_file ) {
         const service_name = Path.basename( service_file, ".ts" )
 
@@ -92,12 +94,12 @@ export const compile = function ( config: BundleConfig, services: string[] ): Pr
                 }
             } )
 
-            results.length > 0 ? reject( results ) : resolve()
+            results.length > 0 ? reject( results ) : resolve( service_file )
         } )
     } ) )
 }
 
-export const bundle = function ( config: BundleConfig, services: string[] ): Promise<any> {
+export const bundle = ( config: BundleConfig ) => function ( services: string[] ): Promise<any> {
     return Promise.all( services.map( function ( service_file ) {
         const bundle_name = Path.basename( service_file, ".ts" )
         const archive = Archiver( "zip" )
@@ -112,7 +114,7 @@ export const bundle = function ( config: BundleConfig, services: string[] ): Pro
             } )
 
             output.on( "close", function () {
-                resolve( bundle_name )
+                resolve( service_file )
             } )
 
             archive.directory( Path.join( config.buildDir, bundle_name ), config.namespace )
@@ -121,14 +123,5 @@ export const bundle = function ( config: BundleConfig, services: string[] ): Pro
             archive.finalize()
         } )
     } ) )
-}
-
-export const build = function ( config ) {
-    return detect( config )
-    // .then( promiseAll( zipModule( config ) ) )
-    // .then( promiseAll( uploadFunction( config ) ) )
-    // .then( promiseAll( updateFunction( config ) ) )
-        .then( output => console.dir( output ) )
-        .catch( e => console.log( e ) )
 }
 
