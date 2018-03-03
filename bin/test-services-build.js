@@ -13,7 +13,9 @@ Services.detect( bundle_config ).then( function ( services ) {
     Services.compile( bundle_config, services ).then( function () {
         Services.bundle( bundle_config, services ).then( function () {
             Services.uploadFunction( bundle_config, services ).then( function () {
-                console.log( "done compiling and bundling" )
+                Services.updateFunction( bundle_config, services ).then( function () {
+                    console.log( "done compiling and bundling" )
+                } )
             } )
         } )
     } )

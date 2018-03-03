@@ -19,6 +19,8 @@ export const uploadFunction = function ( config: BundleConfig, services: string[
         const s3 = new S3( { region: config.region } )
         const bundle_name = `${ config.namespace }--${ module_name }`
 
+        console.log( "uploading", bundle_name, "to", `${config.namespace}` )
+
         FS.readFile( `${ config.buildDir }/${ bundle_name }.zip` )
             .then( function ( buffer ) {
                 return {
@@ -41,6 +43,8 @@ export const updateFunction = function ( config: BundleConfig, services: string[
             S3Bucket: `${ config.namespace }-artifacts`,
             S3Key: `${ function_name }.zip`
         }
+
+        console.log( "updating", function_name, "from", config.namespace )
 
         return lambda.updateFunctionCode( update_config ).promise()
     } ) )
@@ -97,11 +101,11 @@ export const bundle = function ( config: BundleConfig, services: string[] ): Pro
     return Promise.all( services.map( function ( service_file ) {
         const bundle_name = Path.basename( service_file, ".ts" )
         const archive = Archiver( "zip" )
-        const artifact_file = `${ config.namespace }--${ bundle_name }.zip`
+        const archive_file = `${ config.namespace }--${ bundle_name }.zip`
 
         return new Promise( function ( resolve, reject ) {
             const output = FS.createWriteStream(
-                Path.join( config.buildDir, artifact_file ) )
+                Path.join( config.buildDir, archive_file ) )
 
             archive.on( "error", function ( err ) {
                 reject( err )
@@ -111,7 +115,7 @@ export const bundle = function ( config: BundleConfig, services: string[] ): Pro
                 resolve( bundle_name )
             } )
 
-            archive.directory( Path.join( config.buildDir, bundle_name ), "" )
+            archive.directory( Path.join( config.buildDir, bundle_name ), config.namespace )
 
             archive.pipe( output )
             archive.finalize()
