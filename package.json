@@ -16,21 +16,22 @@
   },
   "dependencies": {
     "archiver": "^2.1.1",
-    "aws-sdk": "^2.197.0",
+    "aws-sdk": "^2.205.0",
     "caporal": "^0.10.0",
     "express": "^4.16.2",
     "fs-extra": "latest",
     "globby": "^8.0.1",
+    "lymph-service": "^0.2.0",
     "mime": "^2.2.0",
-    "postcss": "^6.0.16",
-    "rollup": "^0.55.0",
+    "postcss": "^6.0.19",
+    "rollup": "^0.55.5",
     "rollup-plugin-uglify": "^3.0.0",
-    "typescript": "^2.6.2"
+    "typescript": "^2.7.2"
   },
   "devDependencies": {
-    "@types/jest": "^22.1.3",
-    "@types/node": "^9.4.0",
-    "jest": "^22.4.0",
+    "@types/jest": "^22.1.4",
+    "@types/node": "^9.4.6",
+    "jest": "^22.4.2",
     "lymph-client": "^0.14.1",
     "source-map-support": "^0.5.3"
   },
