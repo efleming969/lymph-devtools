@@ -52,7 +52,7 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "FunctionName": "lymph--hello-queries",
-        "Handler": "hello-queries.handler",
+        "Handler": "lymph/hello-queries.handler",
         "Role": {
           "Fn::GetAtt": [
             "LambdaExecutionRole",
@@ -70,7 +70,7 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "FunctionName": "lymph--hello-commands",
-        "Handler": "hello-commands.handler",
+        "Handler": "lymph/hello-commands.handler",
         "Role": {
           "Fn::GetAtt": [
             "LambdaExecutionRole",
@@ -78,7 +78,8 @@
           ]
         },
         "Code": {
-          "ZipFile": "exports.handler = function(e, c, cb){ cb(null, {statusCode:200, headers:{}, body:JSON.stringify({text:'hello, world'})}) }"
+          "S3Bucket": "lymph-artifacts",
+          "S3Key": "lymph--hello-commands.zip"
         },
         "Runtime": "nodejs6.10"
       }
@@ -96,6 +97,30 @@
         "FunctionName": {
           "Fn::GetAtt": [
             "HelloLambdaQueries",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "", [
+              "arn:aws:execute-api",
+              ":", {"Ref": "AWS::Region"},
+              ":", {"Ref": "AWS::AccountId"},
+              ":", {"Ref": "LymphApi"},
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "LymphHelloApiCommandsPermissions": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "HelloLambdaCommands",
             "Arn"
           ]
         },
