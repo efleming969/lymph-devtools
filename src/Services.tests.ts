@@ -1,6 +1,8 @@
 import * as Glob from "globby"
 import * as AWS from "aws-sdk"
 
+import { HTTP } from "lymph-service"
+
 import * as Services from "./Services"
 
 import { removeAllJSFiles } from "./Utils"
@@ -29,7 +31,7 @@ test( "detecting services", function () {
 } )
 
 test( "compiling services to separate build directories", function () {
-    return Services.compile( bundle_config, services ).then( function () {
+    return Services.compile( bundle_config )( services ).then( function () {
         return Glob( bundle_config.buildDir + "/**/*.js" ).then( function ( files: string[] ) {
             expect( files.sort() ).toEqual( [
                 "build/services/hello-commands/common/Lambda.js",
@@ -41,7 +43,7 @@ test( "compiling services to separate build directories", function () {
 } )
 
 test( "bundling services into zip files", function () {
-    return Services.bundle( bundle_config, services ).then( function () {
+    return Services.bundle( bundle_config )( services ).then( function () {
         return Glob( bundle_config.buildDir + "/*.zip" ).then( function ( files: string[] ) {
             expect( files.sort() ).toEqual( [
                 "build/services/lymph--hello-commands.zip",
@@ -53,9 +55,9 @@ test( "bundling services into zip files", function () {
 
 test( "upload service bundles to s3", function () {
     const S3 = new AWS.S3( { region: bundle_config.region } )
-    const time_stamp = new Date().getTime() - 120000 // 2 minute buffer
+    const time_stamp = new Date().getTime() - 180000 // 2 minute buffer
 
-    return Services.uploadFunction( bundle_config, services ).then( function () {
+    return Services.uploadFunction( bundle_config )( services ).then( function () {
         const params: ListObjectsV2Request = { Bucket: "lymph-artifacts" }
 
         return S3.listObjectsV2( params ).promise().then( function ( objects ) {
@@ -68,3 +70,42 @@ test( "upload service bundles to s3", function () {
     } )
 } )
 
+test( "updating and publishing function", function () {
+    const lambda = new AWS.Lambda( { region: bundle_config.region } )
+
+    const invoke_options = {
+        FunctionName: "lymph--hello-queries"
+    }
+
+    return lambda.getFunction( invoke_options ).promise().then( function ( prev_func_info ) {
+        return Services.updateFunction( bundle_config )( services ).then( function () {
+            return lambda.getFunction( invoke_options ).promise().then( function ( next_func_info ) {
+                expect( prev_func_info ).not.toEqual( next_func_info )
+            } )
+        } )
+    } )
+} )
+
+test( "updating and publishing function", function () {
+    const lambda = new AWS.Lambda( { region: bundle_config.region } )
+
+    const invoke_options = {
+        FunctionName: "lymph--hello-queries"
+    }
+
+    return lambda.listVersionsByFunction( invoke_options ).promise().then( function ( response ) {
+        const prev_finger_prints = response.Versions.map( r => Object.assign( {}, {
+            [ r.Version ]: r.CodeSha256
+        } ) )
+
+        return Services.publishFunction( bundle_config )( services ).then( function () {
+            return lambda.listVersionsByFunction( invoke_options ).promise().then( function ( response ) {
+                const next_finger_prints = response.Versions.map( r => Object.assign( {}, {
+                    [ r.Version ]: r.CodeSha256
+                } ) )
+
+                expect( next_finger_prints.length ).toBeGreaterThan( prev_finger_prints.length )
+            } )
+        } )
+    } )
+} )

@@ -47,8 +47,24 @@ export const updateFunction = ( config: BundleConfig ) => function ( services: s
 
         console.log( "updating", function_name, "from", config.namespace )
 
-        return lambda.updateFunctionCode( update_config )
-            .promise().then( () => service_file )
+        return lambda.updateFunctionCode( update_config ).promise()
+    } ) )
+}
+
+export const publishFunction = ( config: BundleConfig ) => function ( services: string[] ) {
+    return Promise.all( services.map( function ( service_file ) {
+        const module_name = Path.basename( service_file, ".ts" )
+
+        const lambda = new Lambda( { region: config.region } )
+        const function_name = `${ config.namespace }--${ module_name }`
+
+        const update_config = {
+            FunctionName: function_name
+        }
+
+        console.log( "publishing", function_name, config.namespace )
+
+        return lambda.publishVersion( update_config ).promise()
     } ) )
 }
 
@@ -124,4 +140,7 @@ export const bundle = ( config: BundleConfig ) => function ( services: string[] 
         } )
     } ) )
 }
+
+
+
 
