@@ -53,6 +53,8 @@
     "transform": {
       "\\.ts": "<rootDir>/jest-preprocessor.js"
     },
-    "setupFiles": ["<rootDir>/jest-setup.js"]
+    "setupFiles": [
+      "<rootDir>/jest-setup.js"
+    ]
   }
 }
