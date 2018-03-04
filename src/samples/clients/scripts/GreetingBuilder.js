@@ -1,0 +1,6 @@
+export default class {
+    build() {
+        return "hello, World!";
+    }
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiR3JlZXRpbmdCdWlsZGVyLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiR3JlZXRpbmdCdWlsZGVyLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBLE1BQU0sQ0FBQyxPQUFPO0lBQ1YsS0FBSztRQUNELE1BQU0sQ0FBQyxlQUFlLENBQUE7SUFDMUIsQ0FBQztDQUNKIiwic291cmNlc0NvbnRlbnQiOlsiZXhwb3J0IGRlZmF1bHQgY2xhc3Mge1xuICAgIGJ1aWxkICgpIHtcbiAgICAgICAgcmV0dXJuIFwiaGVsbG8sIFdvcmxkIVwiXG4gICAgfVxufSJdfQ==

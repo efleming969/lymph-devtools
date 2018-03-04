@@ -4,8 +4,9 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "alwaysStrict": false,
-    "inlineSources": true,
-    "inlineSourceMap": true,
+    "sourceMap": true,
+    "outDir": "lib",
+    "declaration": true,
     "types": [
       "lymph-client",
       "jest"

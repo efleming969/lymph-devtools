@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const Clients = require( "../src/Clients" )
+const Clients = require( "../lib/Clients" )
 
 Clients.configure( "src/samples/clients", "build/clients" )
     .then( Clients.buildScripts )
@@ -9,4 +9,3 @@ Clients.configure( "src/samples/clients", "build/clients" )
     .then( Clients.buildStatics )
     .then( () => console.log( "build completed" ) )
     .catch( ( error ) => console.log( error ) )
-

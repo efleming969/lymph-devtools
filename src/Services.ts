@@ -1,4 +1,4 @@
-import { Lambda, S3 } from "aws-sdk"
+import { Lambda, S3, AWSError, Response } from "aws-sdk"
 
 import * as Typescript from "typescript"
 import * as Glob from "globby"
@@ -20,9 +20,9 @@ export const uploadFunction = ( config: BundleConfig ) => function ( services: s
         const s3 = new S3( { region: config.region } )
         const bundle_name = `${ config.namespace }--${ module_name }`
 
-        console.log( "uploading", bundle_name, "to", `${config.namespace}` )
+        console.log( `uploading ${ bundle_name } to ${ config.namespace }` )
 
-        FS.readFile( `${ config.buildDir }/${ bundle_name }.zip` )
+        return FS.readFile( `${ config.buildDir }/${ bundle_name }.zip` )
             .then( function ( buffer ) {
                 return {
                     Body: buffer,
@@ -46,9 +46,11 @@ export const updateFunction = ( config: BundleConfig ) => function ( services: s
             S3Key: `${ function_name }.zip`
         }
 
-        console.log( "updating", function_name, "from", config.namespace )
+        console.log( `updating ${ function_name } from ${ config.namespace }` )
 
-        return lambda.updateFunctionCode( update_config ).promise()
+        return lambda.updateFunctionCode( update_config )
+            .promise()
+            .then( () => service_file )
     } ) )
 }
 
@@ -63,7 +65,7 @@ export const publishFunction = ( config: BundleConfig ) => function ( services: 
             FunctionName: function_name
         }
 
-        console.log( "publishing", function_name, config.namespace )
+        console.log( `publishing ${ function_name } to ${ config.namespace }` )
 
         return lambda.publishVersion( update_config ).promise()
     } ) )
@@ -86,6 +88,10 @@ export const compile = ( config: BundleConfig ) => function ( services: string[]
     const program = Typescript.createProgram( services, compile_options )
 
     return new Promise( function ( resolve, reject ) {
+
+        console.log( "compiling to", config.buildDir )
+        services.forEach( s => console.log( "\t" + s ) )
+
         const emitResult = program.emit()
 
         const allDiagnostics = Typescript.getPreEmitDiagnostics( program )
@@ -127,6 +133,8 @@ export const bundle = ( config: BundleConfig ) => function ( services: string[] 
         }
 
         return new Promise( function ( resolve, reject ) {
+            console.log( `bundling ${ module_name } to  ${ options.output.path }` )
+
             Webpack( options, function ( err, stats ) {
                 if ( err ) reject( err )
 
@@ -158,6 +166,8 @@ export const archive = ( config: BundleConfig ) => function ( services: string[]
                 resolve( service_file )
             } )
 
+            console.log( `archiving ${ bundle_name } to ${ archive_file }` )
+
             archive.file( Path.join( config.buildDir, `${ bundle_name }.js` ), { name: "index.js" } )
 
             archive.pipe( output )
@@ -165,7 +175,3 @@ export const archive = ( config: BundleConfig ) => function ( services: string[]
         } )
     } ) )
 }
-
-
-
-

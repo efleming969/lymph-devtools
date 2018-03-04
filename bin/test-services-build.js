@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-const Services = require( "../src/Services" )
+require( "source-map-support" ).install()
+
+const Services = require( "../lib/Services" )
 
 const bundle_config = {
     namespace: "lymph",
@@ -11,15 +13,14 @@ const bundle_config = {
 
 const compile = Services.compile( bundle_config )
 const bundle = Services.bundle( bundle_config )
-const upload = Services.updateFunction( bundle_config )
+const archive = Services.archive( bundle_config )
+const upload = Services.uploadFunction( bundle_config )
 const update = Services.updateFunction( bundle_config )
 
 Services.detect( bundle_config )
     .then( compile )
     .then( bundle )
-    // .then( upload )
-    // .then( update )
-    .then( function ( services ) {
-        console.log( "finished building the following services:" )
-        console.log( services.map( s => `-- { s }` ).join( "\n" ) )
-    } )
+    .then( archive )
+    .then( upload )
+    .then( update )
+    .catch( err => console.log( err ) )

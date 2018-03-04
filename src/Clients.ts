@@ -13,7 +13,7 @@ type Config = {
     target: string
 }
 
-export const configure = function ( source: string, target: string ) {
+export const configure = function ( source: string, target: string ): Promise<Config> {
     return Promise.resolve( { source, target } )
 }
 
