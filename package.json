@@ -17,12 +17,10 @@
   "dependencies": {
     "archiver": "^2.1.1",
     "aws-sdk": "^2.205.0",
-    "browserify": "^16.1.0",
     "caporal": "^0.10.0",
     "express": "^4.16.2",
     "fs-extra": "latest",
     "globby": "^8.0.1",
-    "jsonwebtoken": "^8.2.0",
     "lymph-service": "^0.2.0",
     "mime": "^2.2.0",
     "postcss": "^6.0.19",
@@ -30,14 +28,14 @@
     "rollup-plugin-node-resolve": "^3.0.3",
     "rollup-plugin-uglify": "^3.0.0",
     "typescript": "^2.7.2",
-    "webpack": "^4.1.0",
-    "webpack-node-externals": "^1.6.0"
+    "webpack": "^4.1.0"
   },
   "devDependencies": {
     "@types/jest": "^22.1.4",
     "@types/jsonwebtoken": "^7.2.5",
     "@types/node": "^9.4.6",
     "jest": "^22.4.2",
+    "jsonwebtoken": "^8.2.0",
     "lymph-client": "^0.14.1",
     "source-map-support": "^0.5.3"
   },
