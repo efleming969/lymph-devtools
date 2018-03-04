@@ -52,7 +52,7 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "FunctionName": "lymph--hello-queries",
-        "Handler": "lymph/hello-queries.handler",
+        "Handler": "index.handler",
         "Role": {
           "Fn::GetAtt": [
             "LambdaExecutionRole",
@@ -70,7 +70,7 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "FunctionName": "lymph--hello-commands",
-        "Handler": "lymph/hello-commands.handler",
+        "Handler": "index.handler",
         "Role": {
           "Fn::GetAtt": [
             "LambdaExecutionRole",

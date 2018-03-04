@@ -5,6 +5,7 @@ import * as Glob from "globby"
 import * as FS from "fs-extra"
 import * as Path from "path"
 import * as Archiver from "archiver"
+import * as Webpack from "webpack"
 
 export type BundleConfig = {
     namespace: string,
@@ -73,49 +74,73 @@ export const detect = function ( config: BundleConfig ): Promise<string[]> {
 }
 
 export const compile = ( config: BundleConfig ) => function ( services: string[] ): Promise<any> {
-    return Promise.all( services.map( function ( service_file ) {
-        const service_name = Path.basename( service_file, ".ts" )
+    const compile_options = {
+        noEmitOnError: true,
+        noImplicitAny: false,
+        target: Typescript.ScriptTarget.ES2015,
+        module: Typescript.ModuleKind.CommonJS,
+        moduleResolution: Typescript.ModuleResolutionKind.NodeJs,
+        outDir: Path.join( config.buildDir, "pre" )
+    }
 
-        const compile_options = {
-            noEmitOnError: true,
-            noImplicitAny: false,
-            target: Typescript.ScriptTarget.ES2015,
-            module: Typescript.ModuleKind.CommonJS,
-            moduleResolution: Typescript.ModuleResolutionKind.NodeJs,
-            inlineSourceMap: false,
-            inlineSources: false,
-            outDir: Path.join( config.buildDir, service_name )
+    const program = Typescript.createProgram( services, compile_options )
+
+    return new Promise( function ( resolve, reject ) {
+        const emitResult = program.emit()
+
+        const allDiagnostics = Typescript.getPreEmitDiagnostics( program )
+            .concat( emitResult.diagnostics )
+
+        const results = allDiagnostics.map( function ( diagnostic ) {
+            if ( diagnostic.file ) {
+                let { line, character } =
+                    diagnostic.file.getLineAndCharacterOfPosition( diagnostic.start )
+
+                let message =
+                    Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )
+
+                return `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`
+            }
+            else {
+                return `${Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )}`
+            }
+        } )
+
+        results.length > 0 ? reject( results ) : resolve( services )
+    } )
+}
+
+export const bundle = ( config: BundleConfig ) => function ( services: string[] ): Promise<any> {
+    return Promise.all( services.map( function ( service_file ) {
+        const module_name = Path.basename( service_file, ".ts" )
+
+        const options = {
+            entry: Path.join( process.cwd(), config.buildDir, "pre", `${ module_name }.js` ),
+            mode: "production",
+            output: {
+                path: Path.join( process.cwd(), config.buildDir ),
+                libraryTarget: "commonjs",
+                filename: `${ module_name }.js`
+            },
+            target: "node",
+            externals: [ "aws-sdk" ]
         }
 
-        const program = Typescript.createProgram( [ service_file ], compile_options )
-
         return new Promise( function ( resolve, reject ) {
-            const emitResult = program.emit()
+            Webpack( options, function ( err, stats ) {
+                if ( err ) reject( err )
 
-            const allDiagnostics = Typescript.getPreEmitDiagnostics( program )
-                .concat( emitResult.diagnostics )
-
-            const results = allDiagnostics.map( function ( diagnostic ) {
-                if ( diagnostic.file ) {
-                    let { line, character } =
-                        diagnostic.file.getLineAndCharacterOfPosition( diagnostic.start )
-
-                    let message =
-                        Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )
-
-                    return `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`
+                if ( stats.hasErrors() ) {
+                    reject( stats.toString() )
                 }
-                else {
-                    return `${Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )}`
-                }
+
+                resolve( service_file )
             } )
-
-            results.length > 0 ? reject( results ) : resolve( service_file )
         } )
     } ) )
 }
 
-export const bundle = ( config: BundleConfig ) => function ( services: string[] ): Promise<any> {
+export const archive = ( config: BundleConfig ) => function ( services: string[] ): Promise<any> {
     return Promise.all( services.map( function ( service_file ) {
         const bundle_name = Path.basename( service_file, ".ts" )
         const archive = Archiver( "zip" )
@@ -133,7 +158,7 @@ export const bundle = ( config: BundleConfig ) => function ( services: string[] 
                 resolve( service_file )
             } )
 
-            archive.directory( Path.join( config.buildDir, bundle_name ), config.namespace )
+            archive.file( Path.join( config.buildDir, `${ bundle_name }.js` ), { name: "index.js" } )
 
             archive.pipe( output )
             archive.finalize()

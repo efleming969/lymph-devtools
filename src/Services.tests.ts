@@ -22,6 +22,8 @@ const services = [
     "src/samples/services/hello-queries.ts"
 ]
 
+jest.setTimeout( 10000 )
+
 afterAll( removeAllJSFiles( source_dir ) )
 
 test( "detecting services", function () {
@@ -30,20 +32,31 @@ test( "detecting services", function () {
     } )
 } )
 
-test( "compiling services to separate build directories", function () {
+test( "compiling services to separate build directory", function () {
     return Services.compile( bundle_config )( services ).then( function () {
-        return Glob( bundle_config.buildDir + "/**/*.js" ).then( function ( files: string[] ) {
+        return Glob( bundle_config.buildDir + "/pre/**/*.js" ).then( function ( files: string[] ) {
             expect( files.sort() ).toEqual( [
-                "build/services/hello-commands/common/Lambda.js",
-                "build/services/hello-commands/hello-commands.js",
-                "build/services/hello-queries/hello-queries.js",
+                "build/services/pre/common/Lambda.js",
+                "build/services/pre/hello-commands.js",
+                "build/services/pre/hello-queries.js",
             ] )
         } )
     } )
 } )
 
-test( "bundling services into zip files", function () {
+test( "bundling services to a single js file", function () {
     return Services.bundle( bundle_config )( services ).then( function () {
+        return Glob( bundle_config.buildDir + "/*.js" ).then( function ( files: string[] ) {
+            expect( files.sort() ).toEqual( [
+                "build/services/hello-commands.js",
+                "build/services/hello-queries.js",
+            ] )
+        } )
+    } )
+} )
+
+test( "archive services into zip files", function () {
+    return Services.archive( bundle_config )( services ).then( function () {
         return Glob( bundle_config.buildDir + "/*.zip" ).then( function ( files: string[] ) {
             expect( files.sort() ).toEqual( [
                 "build/services/lymph--hello-commands.zip",
