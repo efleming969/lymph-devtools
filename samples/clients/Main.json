@@ -1,16 +1,15 @@
 {
   "title": "Main",
+  "main": "scripts/Main",
   "styles": [
     "styles/Main.css"
   ],
   "scripts": [
     {
       "name": "lymph-client",
+      "iife": "LymphClient",
       "local": "node_modules/lymph-client/lib/lymph-client.js",
       "remote": "https://cdn.jsdelivr.net/npm/lymph-client@0.20.0/lib/lymph-client.js"
     }
-  ],
-  "modules": [
-    "scripts/Main"
   ]
 }

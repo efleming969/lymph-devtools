@@ -1,3 +1,4 @@
+import * as Crypto from "crypto"
 import * as Path from "path"
 import * as Glob from "globby"
 import * as FS from "fs-extra"
@@ -39,4 +40,16 @@ export const selectProps = ( prop_names: string[] ) => function ( original_objec
     }, {} )
 }
 
+export const createHashFromString = function ( input: string ) {
+    return Crypto.createHash( "md5" )
+        .update( input )
+        .digest( "hex" )
+        .slice( 0, 10 )
+}
 
+export const createHash = function ( file ) {
+    return Crypto.createHash( "md5" )
+        .update( FS.readFileSync( file, "utf8" ) )
+        .digest( "hex" )
+        .slice( 0, 10 )
+}

@@ -2,6 +2,7 @@ import * as Express from "express"
 import * as Typescript from "typescript"
 import * as FS from "fs-extra"
 import * as Path from "path"
+import * as Glob from "globby"
 
 import * as Templates from "./Templates"
 import * as Styles from "./Styles"
@@ -17,6 +18,20 @@ export const run = function ( config ) {
     const app = Express()
     const pathFromRoot = createPathFromRoot( config.root )
 
+    app.get( "/", function ( req, res ) {
+        const moduleToListItem = function ( modules_file ) {
+            const module_name = Path.basename( modules_file, ".json" )
+            return `<li><a href="${ module_name }.html">${ module_name }</a></li>`
+        }
+
+        Glob( pathFromRoot( "*.json" ) ).then( function ( modules ) {
+            res.send( `<!DOCTYPE html>
+                <h1>Lymph-based Modules</h1>
+                <ul>${ modules.map( moduleToListItem ) }</ul>
+            ` )
+        } ).catch( err => res.send( err ) )
+    } )
+
     app.get( "/:module_name.html", function ( req, res ) {
         const module_name = req.params.module_name
         const module_config_path = pathFromRoot( `${ module_name }.json` )
@@ -27,6 +42,7 @@ export const run = function ( config ) {
             .then( template => Object.assign( {}, template, { dev: true } ) )
             .then( Templates.render )
             .then( template => res.send( template.text ) )
+            .catch( err => res.send( "there was a problem rendering template" ) )
     } )
 
     app.get( "/node_modules/*", function ( req, res ) {
@@ -51,6 +67,7 @@ export const run = function ( config ) {
 
             res.send( result.outputText.replace( import_regex, function ( match, p1, p2 ) {
                 return `const ${ p1 } = ${ changeCase( p2 ) }`
+
             } ) )
 
         } )
@@ -60,8 +77,8 @@ export const run = function ( config ) {
         const source_file = Path.join( process.cwd(), config.root, req.url )
         Styles.stream( {
             name: "",
-            input: source_file,
-            output: ""
+            source: source_file,
+            target: ""
         } ).then( function ( css ) {
             res.header( { "content-type": "text/css" } )
             res.send( css )
@@ -71,6 +88,8 @@ export const run = function ( config ) {
     app.use( Express.static( config.root ) )
 
     app.listen( config.port, function () {
-        console.log( `server running @ ${ config.port }` )
+        console.log(
+            `server running @ ${ config.port }`
+        )
     } )
 }

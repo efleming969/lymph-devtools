@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const Server = require( "../src/Server" )
+const Server = require( "../lib/Server" )
 
 Server.run( {
     port: 8080,

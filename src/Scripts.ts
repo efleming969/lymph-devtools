@@ -4,6 +4,8 @@ import * as Glob from "globby"
 import * as FS from "fs-extra"
 import * as Rollup from "rollup"
 import * as RollupUglify from "rollup-plugin-uglify"
+import { Module } from "./Clients"
+import { createHash } from "./Utils"
 
 export type Script = {
     name: string,
@@ -11,7 +13,7 @@ export type Script = {
     bundle: string
 }
 
-export const compile = function ( modules: Script[] ) {
+export const compile = function ( modules: Module[] ) {
     const compile_options = {
         noEmitOnError: true,
         noImplicitAny: false,
@@ -22,7 +24,9 @@ export const compile = function ( modules: Script[] ) {
         inlineSources: true,
     }
 
-    const module_scripts = modules.map( m => m.script )
+    const module_scripts = modules.map( m => m.main.source )
+
+    console.log( "compiling", module_scripts )
 
     const program = Typescript.createProgram( module_scripts, compile_options )
 
@@ -51,11 +55,27 @@ export const compile = function ( modules: Script[] ) {
     } )
 }
 
-export const bundle = function ( modules: Script[] ) {
+export const revision = function ( modules: Module[] ) {
+    return Promise.all( modules.map( function ( module ) {
+        const hash = createHash( module.main.target )
+        const dirname = Path.dirname( module.main.target )
+        const new_name = Path.join( dirname, `${ module.name }.${ hash }.js` )
+        return FS.move( module.main.target, new_name ).then( function () {
+            return Object.assign( {}, module, {
+                main: {
+                    source: module.main.source, target: new_name
+                }
+            } )
+        } )
+    } ) )
+}
+
+export const bundle = function ( modules: Module[] ) {
     return Promise.all( modules.map( function ( module ) {
         const rollup_input_options: Rollup.InputOptions = {
-            input: module.script,
+            input: module.main.source,
             onwarn: function ( warning ) {
+                // this suppresses warnings from rollup
             },
             plugins: [
                 RollupUglify()
@@ -63,16 +83,17 @@ export const bundle = function ( modules: Script[] ) {
         }
 
         const rollup_output_options: Rollup.OutputOptions = {
-            file: module.bundle,
+            file: module.main.target,
             format: "iife",
             name: module.name,
-            globals: {}
+            globals: module.globals
         }
 
         return Rollup.rollup( rollup_input_options )
             .then( bundle => bundle.write( rollup_output_options ) )
+            .then( () => module )
 
-    } ) ).then( () => modules )
+    } ) )
 }
 
 export const detect = function ( source_dir: string, target_dir: string ): Promise<Script[]> {

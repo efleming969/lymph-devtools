@@ -3,6 +3,7 @@ import * as Path from "path"
 import * as Glob from "globby"
 
 import { multiline } from "./Utils"
+import { Module } from "./Clients"
 
 export type TemplateScript = {
     name: string,
@@ -24,12 +25,12 @@ export type Template = {
     dev: boolean
 }
 
-const renderStyle = style => `<link rel="stylesheet" href="${style}">`
+const renderStyle = style => `<link rel="stylesheet" href="${ style }">`
 
 const renderModule = is_dev => function ( path ) {
     const type = is_dev ? "module" : "application/javascript"
     const src = path + (is_dev ? "" : ".js")
-    return `<script type="${type}" src="${src}"></script>`
+    return `<script type="${type}" src="${src}" defer></script>`
 }
 
 const renderScript = is_dev => function ( script: TemplateScript ) {
@@ -37,9 +38,7 @@ const renderScript = is_dev => function ( script: TemplateScript ) {
     return `<script type="application/javascript" src="${path}"></script>`
 }
 
-export const render = function ( template: Template ) {
-    const { name, config, dev } = template
-
+export const render = ( dev: boolean ) => function ( module: Module ) {
     const text = multiline`
         | <!DOCTYPE html>
 
@@ -49,12 +48,13 @@ export const render = function ( template: Template ) {
         |     <meta charset="UTF-8">
         |     <meta http-equiv="x-ua-compatible" content="ie=edge">
         |     <meta name="viewport" content="width=device-width, initial-scale=1">
-        |     <title>${config.title}</title>
+        |     <title>${ module.title }</title>
+        |     <link rel="icon" href="statics/images/favicon.ico">
 
-        |     ${ config.styles.map( renderStyle ).join( "" ) }
+        |     ${ module.styles.map( s => (dev) ? s.source : s.target ).map( renderStyle ).join( "" ) }
 
-        |     ${ config.scripts.map( renderScript( dev ) ).join( "" )}
-        |     ${ config.modules.map( renderModule( dev ) ).join( "" )}
+        |     ${ module.scripts.map( renderScript( dev ) ).join( "" )}
+        |     ${ renderModule( dev )( module.main ) }
         | </head>
 
         | <body></body>
@@ -62,7 +62,7 @@ export const render = function ( template: Template ) {
         | </html>
     `
 
-    return { name, dev, config, text }
+    return module
 }
 
 export const read = function ( config_file_path: string ): Promise<Template> {
@@ -91,4 +91,10 @@ export const write = ( target: string ) => function ( template: Template ): Prom
     const file_name = Path.join( target, template.name + ".html" )
     return FS.ensureDir( target )
         .then( () => FS.writeFile( file_name, template.text, "utf8" ) )
+}
+
+export const build = ( dev: boolean ) => function ( modules: Module[] ): Promise<Module[]> {
+    return Promise.all( modules.map( function ( module ) {
+        return FS.writeFile( module, "utf8", render( dev )( module ) )
+    } ) )
 }

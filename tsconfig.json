@@ -6,10 +6,6 @@
     "alwaysStrict": false,
     "sourceMap": true,
     "outDir": "lib",
-    "declaration": true,
-    "types": [
-      "lymph-client",
-      "jest"
-    ]
+    "declaration": true
   }
 }

@@ -2,7 +2,10 @@ node_modules
 lib
 build
 
-.idea/*
+.idea
+.DS_Store
 
-*.DS_Store
 *.log
+
+samples/**/*.js
+src/**/*.js

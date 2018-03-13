@@ -7,38 +7,62 @@ import * as Mime from "mime"
 import * as Scripts from "./Scripts"
 import * as Styles from "./Styles"
 import * as Templates from "./Templates"
+import { Style } from "./Styles"
 
-type Config = {
+export type Config = {
+    source: string,
+    target: string,
+    globals: any
+}
+
+export type Script = {
+    name: string,
+    iife: string,
+    local: string,
+    remote: string
+}
+
+export type MainScript = {
     source: string,
     target: string
 }
 
-export const configure = function ( source: string, target: string ): Promise<Config> {
-    return Promise.resolve( { source, target } )
+export type Module = {
+    name: string,
+    title: string,
+    main: MainScript,
+    styles: Style[],
+    scripts: Script[],
+    globals: any
 }
 
-const mapToPromises = fn => list => Promise.all( list.map( fn ) )
-
-const logit = it => console.log( it )
-
-export const buildTemplates = function ( config: Config ) {
-    return Templates.detect( config.source )
-        .then( templates => templates.map( Templates.render ) )
-        .then( templates => templates.map( Templates.write( config.target ) ) )
-        .then( () => config )
+const mapToStyle = ( source_dir: string, target_dir: string ) => function ( style: string ): Style {
+    return {
+        source: Path.join( source_dir, style ),
+        target: Path.join( target_dir, style )
+    }
 }
 
-export const buildScripts = function ( config: Config ) {
-    return Scripts.detect( config.source, config.target )
-        .then( Scripts.compile )
-        .then( Scripts.bundle )
-        .then( () => config )
-}
+export const configure = function ( source_dir: string, target_dir: string, globals: any ): Promise<Module[]> {
+    const config_file_pattern = Path.join( source_dir, "*.json" )
 
-export const buildStyles = function ( config: Config ) {
-    return Styles.detect( config.source, config.target )
-        .then( Styles.compile )
-        .then( () => config )
+    return Glob( config_file_pattern ).then( function ( module_config_files ) {
+        return Promise.all( module_config_files.map( function ( module_config_file ) {
+            return FS.readFile( module_config_file, "utf8" )
+                .then( raw_config => JSON.parse( raw_config ) )
+                .then( config => Object.assign( {}, {
+                    name: Path.basename( module_config_file, ".json" ),
+                    title: config.title,
+                    main: {
+                        source: Path.join( source_dir, config.main + ".ts" ),
+                        target: Path.join( target_dir, config.main + ".js" )
+                    },
+                    styles: config.styles.map( mapToStyle( source_dir, target_dir ) ),
+                    scripts: config.scripts || {},
+                    globals: globals
+                } ) )
+        } ) )
+    } )
 }
 
 export const buildStatics = function ( config: Config ) {
@@ -47,6 +71,17 @@ export const buildStatics = function ( config: Config ) {
 
     return FS.copy( source_dir, target_dir )
         .then( () => config )
+}
+
+export const build = function ( source: string, target: string, globals: any ) {
+    return configure( source, target, globals )
+        .then( Scripts.compile )
+        .then( Scripts.bundle )
+        .then( Scripts.revision )
+        .then( Styles.compile )
+        .then( Templates.build( false ) ) // needs to be last for incorporating file versions
+        .then( ( modules ) => console.log( JSON.stringify( modules ) ) )
+        .catch( ( error ) => console.log( error ) )
 }
 
 export const deploy = function ( source: string, target: string, region: string ) {
