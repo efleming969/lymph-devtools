@@ -1,8 +1,3 @@
-import * as Crypto from "crypto"
-import * as Path from "path"
-import * as Glob from "globby"
-import * as FS from "fs-extra"
-
 export const multiline = function ( strings, ...args ) {
 
     const whitespace = /^\s*|\n\s*$/g
@@ -22,34 +17,3 @@ export const multiline = function ( strings, ...args ) {
     }, '' ).replace( whitespace, '' ).replace( find_indent, '$1' )
 }
 
-export const mapObject = function ( fn, object ) {
-    return Object.keys( object ).map( key => fn( key, object[ key ] ) )
-}
-
-export const removeAllJSFiles = ( dir: string ) => function () {
-    const js_pattern = Path.join( dir, "**", "*.js" )
-
-    return Glob( js_pattern ).then( function ( js_files ) {
-        return Promise.all( js_files.map( f => FS.remove( f ) ) )
-    } )
-}
-
-export const selectProps = ( prop_names: string[] ) => function ( original_object: object ) {
-    return prop_names.reduce( function ( obj, key ) {
-        return Object.assign( {}, obj, original_object[ key ] )
-    }, {} )
-}
-
-export const createHashFromString = function ( input: string ) {
-    return Crypto.createHash( "md5" )
-        .update( input )
-        .digest( "hex" )
-        .slice( 0, 10 )
-}
-
-export const createHash = function ( file ) {
-    return Crypto.createHash( "md5" )
-        .update( FS.readFileSync( file, "utf8" ) )
-        .digest( "hex" )
-        .slice( 0, 10 )
-}
