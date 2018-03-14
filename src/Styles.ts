@@ -3,44 +3,33 @@ import * as Path from "path"
 import * as Glob from "globby"
 import * as PostCSS from "postcss"
 
-import { Module } from "./Clients"
+import { Module, Config } from "./Clients"
 import { createHash, createHashFromString } from "./Utils"
 
-export type Style = {
-    source: string,
-    target: string
-}
+export const stream = function ( style: string ) {
+    const post_css_config = { from: style, to: style }
 
-export const stream = function ( style: Style ) {
-    const post_css_config = { from: style.source, to: style.target }
-
-    return FS.readFile( style.source, "utf8" )
+    return FS.readFile( style, "utf8" )
         .then( css => PostCSS( [] ).process( css, post_css_config ) )
         .then( result => result.css )
 }
 
-export const process = function ( style: Style ) {
-    const post_css_config = { from: style.source, to: style.target }
-    const target_dir = Path.dirname( style.target )
-    const target_file_name = Path.basename( style.target, ".css" )
+export const process = ( config: Config ) => function ( style: string ) {
+    const style_source = Path.join( config.source, style )
+    const style_target = Path.join( config.target, style )
+
+    const post_css_config = { from: style_source, to: style_target }
+    const target_dir = Path.dirname( style_target )
 
     return FS.ensureDir( target_dir )
-        .then( () => FS.readFile( style.source, "utf8" ) )
+        .then( () => FS.readFile( style_source, "utf8" ) )
         .then( css => PostCSS( [] ).process( css, post_css_config ) )
-        .then( function ( result ) {
-            const hash = createHashFromString( result.css )
-            const new_name = Path.join( target_dir, `${ target_file_name }.${ hash }.css` )
-            return FS.writeFile( new_name, result.css ).then(
-                () => Object.assign( {}, style, { target: new_name } ) )
-        } )
+        .then( result => FS.writeFile( style_target, result.css ) )
 }
 
-export const compile = function ( modules: Module[] ) {
-    return Promise.all( modules.map( function ( module ) {
-        return Promise.all( module.styles.map( process ) ).then( function ( styles ) {
-            return Object.assign( {}, module, { styles: styles } )
-        } )
-    } ) )
+export const compile = ( config: Config ) => function ( module: Module ) {
+    return Promise.all( module.styles.map( process( config ) ) )
+        .then( () => module )
 }
 
 export const detect = function ( source: string, target: string ) {

@@ -1,32 +1,31 @@
 import * as Templates from "./Templates"
 import { multiline } from "./Utils"
 
-const dummy_config = {
-    "title": "Main",
-    "styles": [
-        "/styles/Main.css"
-    ],
-    "scripts": [
+const module_configuration = {
+    name: "Main",
+    title: "Main",
+    styles: [ "/styles/Main.css", "/styles/General.css" ],
+    scripts: [
         {
-            "name": "lymph-client",
-            "local": "/node_modules/lymph-client/lib/lymph-client.js",
-            "remote": "http://remote/lymph-client.js"
+            name: "lymph-client",
+            iife: "LymphClient",
+            local: "/node_modules/lymph-client/lib/lymph-client.js",
+            remote: "http://remote/lymph-client.js"
         }
     ],
-    "modules": [
-        "/scripts/Main"
-    ]
+    globals: {}
+}
+
+const config = {
+    dev: false,
+    source: "",
+    target: ""
 }
 
 test( "rendering production template for a given configuration", function () {
-    const result = Templates.render( {
-        name: "Main",
-        dev: false,
-        config: dummy_config,
-        text: ""
-    } )
+    const result = Templates.render( config )( module_configuration )
 
-    expect( result.text ).toEqual( multiline`
+    expect( result ).toEqual( multiline`
         | <!DOCTYPE html>
 
         | <html lang="en">
@@ -36,11 +35,13 @@ test( "rendering production template for a given configuration", function () {
         |     <meta http-equiv="x-ua-compatible" content="ie=edge">
         |     <meta name="viewport" content="width=device-width, initial-scale=1">
         |     <title>Main</title>
+        |     <link rel="icon" href="statics/images/favicon.ico">
 
         |     <link rel="stylesheet" href="/styles/Main.css">
+        |     <link rel="stylesheet" href="/styles/General.css">
 
         |     <script type="application/javascript" src="http://remote/lymph-client.js"></script>
-        |     <script type="application/javascript" src="/scripts/Main.js"></script>
+        |     <script type="application/javascript" src="/scripts/Main.js" defer></script>
         | </head>
 
         | <body></body>

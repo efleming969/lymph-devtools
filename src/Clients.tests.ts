@@ -1,79 +1,119 @@
-// import * as FS from "fs-extra"
+import * as FS from "fs-extra"
 import * as Path from "path"
-// import * as glob from "globby"
+import * as Glob from "globby"
 
 import * as Clients from "./Clients"
 
-const sample_source = Path.join( "src", "samples", "clients" )
-const sample_target = Path.join( "build", "clients" )
+const sample_source = Path.join( "samples", "clients", "src" )
+const sample_target = Path.join( "samples", "clients", "build" )
 
-const config = { source: sample_source, target: sample_target }
+const removeBuildDirectory = () => FS.remove( sample_target )
 
-test( "need to add some unit tests", function () {
-    expect( true ).toBeTruthy()
+const removeAllJSFiles = function () {
+    const js_pattern = Path.join( sample_source, "**", "*.js" )
+
+    return Glob( js_pattern ).then( function ( js_files ) {
+        return Promise.all( js_files.map( f => FS.remove( f ) ) )
+    } )
+}
+
+const config = {
+    dev: false,
+    source: sample_source,
+    target: sample_target
+}
+
+describe( "building modules", function () {
+
+    const module_configuration = {
+        name: "Main",
+        title: "Main",
+        styles: [
+            "/styles/Main.css",
+            "/styles/General.css"
+        ],
+        scripts: [],
+        globals: {}
+    }
+
+    beforeEach( function () {
+        return Clients.buildModule( config )( module_configuration )
+    } )
+
+    afterEach( removeAllJSFiles )
+    afterEach( removeBuildDirectory )
+
+    it( "compiles main module and dependent scripts to source directory", function () {
+        return Glob( sample_source + "/**/*.js" ).then( function ( files: string[] ) {
+            expect( files.sort() ).toEqual( [
+                Path.join( sample_source, "/scripts/GreetingBuilder.js" ),
+                Path.join( sample_source, "/scripts/Main.js" ),
+                Path.join( sample_source, "/scripts/Simple.js" )
+            ] )
+        } )
+    } )
+
+    it( "creates main bundle in build directory", function () {
+        return Glob( sample_target + "/**/*.js" ).then( function ( files: string[] ) {
+            expect( files.sort() ).toEqual( [
+                Path.join( sample_target, "/scripts/Main.js" )
+            ] )
+        } )
+    } )
+
+    it( "compiles styles to build directory", function () {
+        return Glob( sample_target + "/**/*.css" ).then( function ( files: string[] ) {
+            expect( files.sort() ).toEqual( [
+                Path.join( sample_target, "styles", "General.css" ),
+                Path.join( sample_target, "styles", "Main.css" )
+            ] )
+        } )
+    } )
+
+    it( "compiles module html entry point to the build directory", function () {
+        return Glob( sample_target + "/**/*.html" ).then( function ( files: string[] ) {
+            expect( files.sort() ).toEqual( [
+                Path.join( sample_target, "Main.html" )
+            ] )
+        } )
+    } )
 } )
 
-// const removeBuildDirectory = () => FS.remove( sample_target )
+describe( "misc build options", function () {
+    afterEach( removeBuildDirectory )
 
-// const removeAllJSFiles = function () {
-//     const js_pattern = Path.join( sample_source, "**", "*.js" )
-//
-//     return glob( js_pattern ).then( function ( js_files ) {
-//         return Promise.all( js_files.map( f => FS.remove( f ) ) )
-//     } )
-// }
+    test( "copy all static files to build directory", function () {
+        return Clients.copyStatics( config )
+            .then( () => Glob( Path.join( sample_target, "statics" ) ) )
+            .then( function ( files: string[] ) {
+                expect( files.sort() ).toEqual( [
+                    Path.join( sample_target, "statics", "nodejs-logo.png" )
+                ] )
+            } )
+    } )
 
-// afterAll( removeAllJSFiles )
-// afterAll( removeBuildDirectory )
+    test( "retrieving all module config files", function () {
+        return Clients.detectModules( config ).then( function ( modules ) {
+            expect( modules ).toEqual( [
+                {
+                    name: "Main",
+                    title: "Main",
+                    styles: [
+                        "styles/Main.css",
+                        "styles/General.css"
+                    ],
+                    scripts: [
+                        {
+                            "name": "lymph-client",
+                            "iife": "LymphClient",
+                            "local": "node_modules/lymph-client/lib/lymph-client.js",
+                            "remote": "https://cdn.jsdelivr.net/npm/lymph-client@0.20.0/lib/lymph-client.js"
+                        }
+                    ],
+                    globals: {}
+                }
+            ] )
+        } )
+    } )
+} )
 
-// test( "compile scripts to source directory", function () {
-//     return Clients.buildScripts( config ).then( function () {
-//         const scripts_dir = Path.join( "src", "samples", "clients", "scripts" )
-//         return glob( "src/samples/clients/**/*.js" ).then( function ( files: string[] ) {
-//             expect( files.sort() ).toEqual( [
-//                 Path.join( scripts_dir, "/GreetingBuilder.js" ),
-//                 Path.join( scripts_dir, "/Main.js" ),
-//                 Path.join( scripts_dir, "/Simple.js" )
-//             ] )
-//         } )
-//     } )
-// } )
-
-// test( "creating bundles in build directory", function () {
-//     return Clients.buildScripts( config ).then( function () {
-//         return glob( "build/**/*.js" ).then( function ( files: string[] ) {
-//             expect( files ).toEqual( [ "build/clients/scripts/Main.js" ] )
-//         } )
-//     } )
-// } )
-
-// test( "compiling styles to build directory", function () {
-//     return Clients.buildStyles( config ).then( function () {
-//         return glob( "build/**/*.css" ).then( function ( files: string[] ) {
-//             expect( files.sort() ).toEqual( [
-//                 "build/clients/styles/General.css",
-//                 "build/clients/styles/Main.css"
-//             ] )
-//         } )
-//     } )
-// } )
-
-// test( "compiling templates to build directory", function () {
-//     return Clients.buildTemplates( config ).then( function () {
-//         return glob( "build/**/*.html" ).then( function ( files: string[] ) {
-//             expect( files.sort() ).toEqual( [
-//                 "build/clients/Main.html",
-//             ] )
-//         } )
-//     } )
-// } )
-
-// test( "copy all static files to build directory", function () {
-//     return Clients.buildStatics( config )
-//         .then( () => glob( "build/clients/statics" ) )
-//         .then( function ( files: string[] ) {
-//             expect( files.sort() ).toEqual( [
-//                 "build/clients/statics/nodejs-logo.png",
-//             ] )
-//         } )
-// } )
