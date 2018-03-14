@@ -87,7 +87,8 @@ describe( "misc build options", function () {
             .then( () => Glob( Path.join( sample_target, "statics" ) ) )
             .then( function ( files: string[] ) {
                 expect( files.sort() ).toEqual( [
-                    Path.join( sample_target, "statics", "nodejs-logo.png" )
+                    Path.join( sample_target, "statics", "images", "favicon.ico" ),
+                    Path.join( sample_target, "statics", "images", "nodejs-logo.png" )
                 ] )
             } )
     } )
