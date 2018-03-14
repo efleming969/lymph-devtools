@@ -1,6 +1,5 @@
 import * as FS from "fs-extra"
 import * as Path from "path"
-import * as Glob from "globby"
 
 import { multiline } from "./Utils"
 import { Module, ModuleScript, Config } from "./Clients"
@@ -19,7 +18,6 @@ const renderScript = is_dev => function ( script: ModuleScript ) {
 }
 
 export const render = ( config: Config ) => function ( module: Module ) {
-    console.log( "rendering", config, module )
     return multiline`
         | <!DOCTYPE html>
 
@@ -43,34 +41,6 @@ export const render = ( config: Config ) => function ( module: Module ) {
         | </html>
     `
 }
-
-// export const read = function ( config_file_path: string ): Promise<Template> {
-//     const name = Path.basename( config_file_path, ".json" )
-//     return FS.readFile( config_file_path, "utf8" )
-//         .then( config_string => JSON.parse( config_string ) as TemplateConfig )
-//         .then( config => ({ name, config, text: "" }) )
-// }
-//
-// export const detect = function ( source_dir: string ): Promise<Template[]> {
-//     const config_file_pattern = Path.join( source_dir, "*.json" )
-//
-//     const parseToTemplateConfig = config_string => JSON.parse( config_string ) as TemplateConfig
-//
-//     return Glob( config_file_pattern ).then( function ( config_file_paths ) {
-//         return config_file_paths.map( function ( config_file_path ) {
-//             const name = Path.basename( config_file_path, ".json" )
-//             return FS.readFile( config_file_path, "utf8" )
-//                 .then( parseToTemplateConfig )
-//                 .then( config => ({ name, config, text: "" }) )
-//         } )
-//     } ).then( parse_config_promises => Promise.all( parse_config_promises ) )
-// }
-//
-// export const write = ( target: string ) => function ( template: Template ): Promise<void> {
-//     const file_name = Path.join( target, template.name + ".html" )
-//     return FS.ensureDir( target )
-//         .then( () => FS.writeFile( file_name, template.text, "utf8" ) )
-// }
 
 export const compile = ( config: Config ) => function ( module: Module ): Promise<Module> {
     const html_file = Path.join( config.target, module.name + ".html" )
