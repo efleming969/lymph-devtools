@@ -9,3 +9,5 @@ build
 
 samples/**/*.js
 src/**/*.js
+
+*.d.ts
