@@ -9,7 +9,7 @@ const module_configuration = {
         {
             name: "lymph-client",
             iife: "LymphClient",
-            local: "/node_modules/lymph-client/lib/lymph-client.js",
+            local: "/node_modules/lymph-client/dist/lymph-client.js",
             remote: "http://remote/lymph-client.js"
         }
     ],

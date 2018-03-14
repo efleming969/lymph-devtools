@@ -107,7 +107,7 @@ describe( "misc build options", function () {
                         {
                             "name": "lymph-client",
                             "iife": "LymphClient",
-                            "local": "node_modules/lymph-client/lib/lymph-client.js",
+                            "local": "node_modules/lymph-client/dist/lymph-client.js",
                             "remote": "https://cdn.jsdelivr.net/npm/lymph-client@0.20.0/lib/lymph-client.js"
                         }
                     ],

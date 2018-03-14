@@ -38,11 +38,11 @@ export const run = function ( config ) {
 
         res.header( "content-type", "text/html" )
 
-        // Templates.read( module_config_path )
-        //     .then( template => Object.assign( {}, template, { dev: true } ) )
-        //     .then( Templates.render )
-        //     .then( template => res.send( template.text ) )
-        //     .catch( err => res.send( "there was a problem rendering template" ) )
+        FS.readFile( module_config_path, "utf8" ).then( function ( module_config_content ) {
+            const general_config = { source: "", target: "", dev: true }
+            const module_config = JSON.parse( module_config_content )
+            res.send( Templates.render( general_config )( module_config ) )
+        } ).catch( err => res.send( "there was a problem rendering template" ) )
     } )
 
     app.get( "/node_modules/*", function ( req, res ) {
@@ -75,14 +75,10 @@ export const run = function ( config ) {
 
     app.get( "/styles/*", function ( req, res ) {
         const source_file = Path.join( process.cwd(), config.root, req.url )
-        // Styles.stream( {
-        //     name: "",
-        //     source: source_file,
-        //     target: ""
-        // } ).then( function ( css ) {
-        //     res.header( { "content-type": "text/css" } )
-        //     res.send( css )
-        // } )
+        Styles.stream( source_file ).then( function ( css ) {
+            res.header( { "content-type": "text/css" } )
+            res.send( css )
+        } )
     } )
 
     app.use( Express.static( config.root ) )
