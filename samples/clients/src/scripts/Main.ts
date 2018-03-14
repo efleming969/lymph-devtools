@@ -18,6 +18,6 @@ simple.printTo( console )
 console.log( HTML )
 
 const img = document.createElement("img")
-img.src = "statics/nodejs-logo.png"
+img.src = "statics/images/nodejs-logo.png"
 
 document.body.appendChild(img)
