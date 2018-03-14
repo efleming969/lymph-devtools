@@ -7,5 +7,6 @@
     "sourceMap": true,
     "outDir": "lib",
     "declaration": true
-  }
+  },
+  "exclude": ["samples", "lib"]
 }
