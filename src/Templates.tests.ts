@@ -4,7 +4,7 @@ import { multiline } from "./Utils"
 const module_configuration = {
     name: "Main",
     title: "Main",
-    styles: [ "/styles/Main.css", "/styles/General.css" ],
+    styles: [ "styles/Main.css", "styles/General.css" ],
     scripts: [
         {
             name: "lymph-client",
@@ -37,11 +37,11 @@ test( "rendering production template for a given configuration", function () {
         |     <title>Main</title>
         |     <link rel="icon" href="statics/images/favicon.ico">
 
-        |     <link rel="stylesheet" href="/styles/Main.css">
-        |     <link rel="stylesheet" href="/styles/General.css">
+        |     <link rel="stylesheet" href="styles/Main.css">
+        |     <link rel="stylesheet" href="styles/General.css">
 
         |     <script type="application/javascript" src="http://remote/lymph-client.js"></script>
-        |     <script type="application/javascript" src="/scripts/Main.js" defer></script>
+        |     <script type="application/javascript" src="scripts/Main.js" defer></script>
         | </head>
 
         | <body></body>
