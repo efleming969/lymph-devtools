@@ -24,7 +24,6 @@
     "fs-extra": "^5.0.0",
     "globby": "^8.0.1",
     "lymph-service": "^0.2.0",
-    "mime": "^2.2.0",
     "postcss": "^6.0.19",
     "rollup": "^0.56.5",
     "rollup-plugin-node-resolve": "^3.2.0",
