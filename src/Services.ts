@@ -7,14 +7,14 @@ import * as Path from "path"
 import * as Archiver from "archiver"
 import * as Webpack from "webpack"
 
-export type BundleConfig = {
+export type Config = {
     namespace: string,
     buildDir: string
     sourceDir: string,
     region: string
 }
 
-export const uploadFunction = ( config: BundleConfig ) => function ( services: string[] ) {
+export const uploadFunction = ( config: Config ) => function ( services: string[] ) {
     return Promise.all( services.map( function ( service_file ) {
         const module_name = Path.basename( service_file, ".ts" )
         const s3 = new S3( { region: config.region } )
@@ -34,7 +34,7 @@ export const uploadFunction = ( config: BundleConfig ) => function ( services: s
     } ) )
 }
 
-export const updateFunction = ( config: BundleConfig ) => function ( services: string[] ) {
+export const updateFunction = ( config: Config ) => function ( services: string[] ) {
     return Promise.all( services.map( function ( service_file ) {
         const module_name = Path.basename( service_file, ".ts" )
         const lambda = new Lambda( { region: config.region } )
@@ -54,7 +54,7 @@ export const updateFunction = ( config: BundleConfig ) => function ( services: s
     } ) )
 }
 
-export const publishFunction = ( config: BundleConfig ) => function ( services: string[] ) {
+export const publishFunction = ( config: Config ) => function ( services: string[] ) {
     return Promise.all( services.map( function ( service_file ) {
         const module_name = Path.basename( service_file, ".ts" )
 
@@ -71,11 +71,11 @@ export const publishFunction = ( config: BundleConfig ) => function ( services: 
     } ) )
 }
 
-export const detect = function ( config: BundleConfig ): Promise<string[]> {
+export const detect = function ( config: Config ): Promise<string[]> {
     return Glob( Path.join( config.sourceDir, "*.ts" ) )
 }
 
-export const compile = ( config: BundleConfig ) => function ( services: string[] ): Promise<any> {
+export const compile = ( config: Config ) => function ( services: string[] ): Promise<any> {
     const compile_options = {
         noEmitOnError: true,
         noImplicitAny: false,
@@ -116,7 +116,7 @@ export const compile = ( config: BundleConfig ) => function ( services: string[]
     } )
 }
 
-export const bundle = ( config: BundleConfig ) => function ( services: string[] ): Promise<any> {
+export const bundle = ( config: Config ) => function ( services: string[] ): Promise<any> {
     return Promise.all( services.map( function ( service_file ) {
         const module_name = Path.basename( service_file, ".ts" )
 
@@ -148,7 +148,7 @@ export const bundle = ( config: BundleConfig ) => function ( services: string[] 
     } ) )
 }
 
-export const archive = ( config: BundleConfig ) => function ( services: string[] ): Promise<any> {
+export const archive = ( config: Config ) => function ( services: string[] ): Promise<any> {
     return Promise.all( services.map( function ( service_file ) {
         const bundle_name = Path.basename( service_file, ".ts" )
         const archive = Archiver( "zip" )
@@ -174,4 +174,8 @@ export const archive = ( config: BundleConfig ) => function ( services: string[]
             archive.finalize()
         } )
     } ) )
+}
+
+export const buildModule = ( config: Config ) => function ( module: string ): Promise<string> {
+    return Promise.resolve( module )
 }
