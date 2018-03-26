@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "target": "es2016",
+    "target": "es2015",
     "module": "commonjs",
     "moduleResolution": "node",
     "alwaysStrict": false,
     "sourceMap": false,
-    "declaration": true
+    "outDir": "lib"
   }
 }
