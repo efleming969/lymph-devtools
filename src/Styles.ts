@@ -4,7 +4,6 @@ import * as Glob from "globby"
 import * as PostCSS from "postcss"
 
 import { Module, Config } from "./Clients"
-import { createHash, createHashFromString } from "./Utils"
 
 export const stream = function ( style: string ) {
     const post_css_config = { from: style, to: style }
