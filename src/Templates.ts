@@ -28,7 +28,7 @@ export const render = ( config: Config ) => function ( module: Module ) {
         |     <meta http-equiv="x-ua-compatible" content="ie=edge">
         |     <meta name="viewport" content="width=device-width, initial-scale=1">
         |     <title>${ module.title }</title>
-        |     <link rel="icon" href="statics/images/favicon.ico">
+        |     <link rel="icon" href="images/favicon.ico">
 
         |     ${ module.styles.map( renderStyle ).join( "\n" ) }
 
