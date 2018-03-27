@@ -8,6 +8,9 @@ build
 *.log
 
 samples/**/*.js
+samples/**/*.js.map
+
 src/**/*.js
+src/**/*.js.map
 
 *.d.ts
