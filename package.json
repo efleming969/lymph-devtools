@@ -16,6 +16,7 @@
     "url": "https://github.com/efleming969/lymph-devtools"
   },
   "dependencies": {
+    "pug": "^2",
     "ajv": "^6.2.1",
     "archiver": "^2.1.1",
     "aws-sdk": "^2.209.0",
@@ -28,8 +29,9 @@
     "rollup": "^0.56.5",
     "rollup-plugin-node-resolve": "^3.2.0",
     "rollup-plugin-uglify": "^3.0.0",
-    "typescript": "^2.7.2",
-    "webpack": "^4.1.1"
+    "typescript": "^2.7",
+    "webpack": "^4",
+    "ultradom": "^2"
   },
   "devDependencies": {
     "@types/acorn": "^4.0.3",

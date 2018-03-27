@@ -1,23 +1,27 @@
-import { Utils, HTML } from "lymph-client"
+import "./HTML.js"
 
-import GreetingBuilder from "./GreetingBuilder"
-import Simple from "./Simple"
+const { h, app } = hyperapp
 
-const builder = new GreetingBuilder()
+const state = {
+    count: 0
+}
 
-console.log( builder.build() )
+const actions = {
+    down: value => function ( state ) {
+        return { count: state.count - value }
+    },
+    up: value => function ( state ) {
+        return { count: state.count + value }
+    }
+}
 
-const person = { name: "joe", age: 20 }
+const view = ( state, actions ) => h( "div", {}, [
+    h( "h1", {}, state.count ),
+    h( "button", { onclick: () => actions.down( 1 ) }, [ "-" ] ),
+    h( "button", { onclick: () => actions.up( 1 ) }, [ "+" ] ),
+    h( "div", {}, [
+        h( "img", { src: "images/nodejs-logo.png" } )
+    ] )
+] )
 
-console.log( Utils.merge( person, { age: 40 } ) )
-
-const simple = new Simple( "joe" )
-
-simple.printTo( console )
-
-console.log( HTML )
-
-const img = document.createElement("img")
-img.src = "images/nodejs-logo.png"
-
-document.body.appendChild(img)
+app( state, actions, view, document.querySelector( "main" ) )

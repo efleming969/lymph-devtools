@@ -1,0 +1,11 @@
+extends layout.pug
+
+block scripts
+    script(src='https://cdn.jsdelivr.net/npm/hyperapp@1.2.5/dist/hyperapp.min.js ')
+    script(src='https://cdn.jsdelivr.net/npm/@hyperapp/fx@0.7.0/dist/hyperappFx.min.js')
+    script(type='module' src=`scripts/${ name }.js`)
+
+block content
+    header
+        h1= title
+    main
