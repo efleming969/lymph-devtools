@@ -5,10 +5,16 @@ import * as PostCSS from "postcss"
 
 import { Module, Config } from "./Clients"
 
-export const stream = function ( style: string ) {
-    const post_css_config = { from: style, to: style }
+export type RenderOptions = {
+    name: string,
+    directory: string
+}
 
-    return FS.readFile( style, "utf8" )
+export const render = function ( options: RenderOptions ) {
+    const style_file = Path.join( options.directory, `${ options.name }.css` )
+    const post_css_config = { from: style_file, to: style_file }
+
+    return FS.readFile( style_file, "utf8" )
         .then( css => PostCSS( [] ).process( css, post_css_config ) )
         .then( result => result.css )
 }

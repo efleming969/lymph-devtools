@@ -1,5 +1,5 @@
 export default class {
-    build () {
-        return "hello, World!"
+    static build () {
+        return "Hello, World!"
     }
 }

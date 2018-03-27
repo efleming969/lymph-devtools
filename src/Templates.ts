@@ -4,8 +4,20 @@ import * as Path from "path"
 
 import { Module, ModuleScript, Config } from "./Clients"
 
-export const render = function ( template_source: string ): Promise<string> {
-    return Promise.resolve( "" )
+export type TemplateOptions = {
+    name: string,
+    directory: string
+}
+
+export const render = function ( options: TemplateOptions ) {
+    const template_file = Path.join( options.directory, `${ options.name }.pug` )
+
+    return new Promise( function ( resolve, reject ) {
+        Pug.renderFile( template_file, options, function ( err, rendered_template ) {
+            if ( err ) reject( err )
+            else resolve( rendered_template )
+        } )
+    } )
 }
 
 // export const compile = ( config: Config ) => function ( module: Module ): Promise<Module> {

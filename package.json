@@ -43,7 +43,8 @@
     "jsonwebtoken": "^8.2.0",
     "lymph-client": "^0.14.1",
     "magic-string": "^0.22.4",
-    "source-map-support": "^0.5.3"
+    "source-map-support": "^0.5.3",
+    "webpack-cli": "^2.0.13"
   },
   "jest": {
     "moduleFileExtensions": [
