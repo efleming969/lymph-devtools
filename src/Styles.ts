@@ -4,14 +4,12 @@ import * as Glob from "globby"
 import * as PostCSS from "postcss"
 
 import { Config } from "./Clients"
+import { map, waitForAll } from "./Utils"
 
 export type RenderOptions = {
     name: string,
     directory: string
 }
-
-const map = fn => list => list.map( fn )
-const waitForAll = list_of_promises => Promise.all( list_of_promises )
 
 export const render = function ( options: RenderOptions ) {
     const style_file = Path.join( options.directory, `${ options.name }.css` )
