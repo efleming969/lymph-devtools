@@ -3,47 +3,45 @@ import * as Path from "path"
 import * as Glob from "globby"
 import * as PostCSS from "postcss"
 
-import { Module, Config } from "./Clients"
+import { Config } from "./Clients"
 
 export type RenderOptions = {
     name: string,
     directory: string
 }
 
+const map = fn => list => list.map( fn )
+const waitForAll = list_of_promises => Promise.all( list_of_promises )
+
 export const render = function ( options: RenderOptions ) {
     const style_file = Path.join( options.directory, `${ options.name }.css` )
-    const post_css_config = { from: style_file, to: style_file }
+    const process_option = { from: style_file, to: style_file }
 
     return FS.readFile( style_file, "utf8" )
-        .then( css => PostCSS( [] ).process( css, post_css_config ) )
+        .then( css => PostCSS( [] ).process( css, process_option ) )
         .then( result => result.css )
 }
 
-export const process = ( config: Config ) => function ( style: string ) {
-    const style_source = Path.join( config.source, style )
-    const style_target = Path.join( config.target, style )
-
-    const post_css_config = { from: style_source, to: style_target }
-    const target_dir = Path.dirname( style_target )
-
-    return FS.ensureDir( target_dir )
-        .then( () => FS.readFile( style_source, "utf8" ) )
-        .then( css => PostCSS( [] ).process( css, post_css_config ) )
-        .then( result => FS.writeFile( style_target, result.css ) )
+const process = function ( option: PostCSS.ProcessOptions ) {
+    return FS.readFile( option.from, "utf8" )
+        .then( css => PostCSS( [] ).process( css, option ) )
+        .then( result => FS.writeFile( option.to, result.css ) )
 }
 
-export const compile = ( config: Config ) => function ( module: Module ) {
-    return Promise.all( module.styles.map( process( config ) ) )
-        .then( () => module )
+const toProcessOption = ( target: string ) => function ( css_file: string ): PostCSS.ProcessOptions {
+    return {
+        from: css_file,
+        to: Path.join( target, "styles", Path.basename( css_file ) )
+    }
 }
 
-export const detect = function ( source: string, target: string ) {
-    const css_file_pattern = Path.join( source, "**", "*.css" )
+export const build = function ( config: Config ) {
+    const css_file_pattern = Path.join( config.source, "**", "*.css" )
 
-    return Glob( css_file_pattern ).then( files => files.map( function ( f ) {
-        const name = Path.basename( f, ".css" )
-        const input = f
-        const output = Path.join( target, "styles", name + ".css" )
-        return { name, input, output }
-    } ) )
+    return FS.ensureDir( Path.join( config.target, "styles" ) )
+        .then( () => Glob( css_file_pattern ) )
+        .then( map( toProcessOption( config.target ) ) )
+        .then( map( process ) )
+        .then( waitForAll )
 }
+
