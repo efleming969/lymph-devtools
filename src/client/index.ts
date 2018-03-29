@@ -17,22 +17,6 @@ export type Config = {
     bundles: string[]
 }
 
-export type ModuleScript = {
-    name: string,
-    iife: string,
-    local: string,
-    remote: string
-}
-
-export type Module = {
-    name: string,
-    title: string,
-    styles: string[],
-
-    scripts: ModuleScript[],
-    globals: any
-}
-
 export const deploy = function ( source: string, target: string, region: string ) {
     return S3.put( source, target, region )
         .then( () => S3.clean( source, target, region ) )
