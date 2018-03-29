@@ -6,6 +6,9 @@ import * as Templates from "./Templates"
 import * as Bundles from "./Bundles"
 import * as Statics from "./Statics"
 import * as S3 from "./S3"
+
+// need an unused import to solve type checker issues
+// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/#Known_Limitations
 import * as AWS from "aws-sdk"
 
 export type Config = {
