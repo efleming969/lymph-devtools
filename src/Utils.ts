@@ -17,3 +17,7 @@ export const multiline = function ( strings, ...args ) {
     }, '' ).replace( whitespace, '' ).replace( find_indent, '$1' )
 }
 
+export const map = fn => list => list.map( fn )
+
+export const waitForAll = list_of_promises => Promise.all( list_of_promises )
+

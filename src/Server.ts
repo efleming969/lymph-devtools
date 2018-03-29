@@ -1,9 +1,9 @@
 import * as Express from "express"
 import * as Path from "path"
 
-import * as Templates from "./Templates"
-import * as Styles from "./Styles"
-import * as Scripts from "./Scripts"
+import * as Templates from "./client/Templates"
+import * as Styles from "./client/Styles"
+import * as Scripts from "./client/Scripts"
 
 const createPathFromRoot = root => base_name =>
     Path.join( process.cwd(), root, base_name )

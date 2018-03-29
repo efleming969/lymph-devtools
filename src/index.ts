@@ -1,4 +1,4 @@
-import * as Clients from "./Clients"
+import * as Clients from "./client/index"
 import * as Services from "./Services"
 import * as Server from "./Server"
 

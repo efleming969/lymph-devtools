@@ -46,6 +46,7 @@
       "ts",
       "js"
     ],
+    "testPathIgnorePatterns": ["/samples/", "/node_modules/"],
     "testMatch": [
       "**/*.tests.ts"
     ],

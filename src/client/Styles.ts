@@ -3,8 +3,8 @@ import * as Path from "path"
 import * as Glob from "globby"
 import * as PostCSS from "postcss"
 
-import { Config } from "./Clients"
-import { map, waitForAll } from "./Utils"
+import { Config } from "./index"
+import { map, waitForAll } from "../Utils"
 
 export type RenderOptions = {
     name: string,
@@ -26,7 +26,7 @@ const process = function ( option: PostCSS.ProcessOptions ) {
         .then( result => FS.writeFile( option.to, result.css ) )
 }
 
-const toProcessOption = ( target: string ) => function ( css_file: string ): PostCSS.ProcessOptions {
+const processOption = ( target: string ) => function ( css_file: string ): PostCSS.ProcessOptions {
     return {
         from: css_file,
         to: Path.join( target, "styles", Path.basename( css_file ) )
@@ -34,12 +34,11 @@ const toProcessOption = ( target: string ) => function ( css_file: string ): Pos
 }
 
 export const build = function ( config: Config ) {
-    const css_file_pattern = Path.join( config.source, "**", "*.css" )
+    const css_file_pattern = Path.join( config.source, "styles", "*.css" )
 
     return FS.ensureDir( Path.join( config.target, "styles" ) )
         .then( () => Glob( css_file_pattern ) )
-        .then( map( toProcessOption( config.target ) ) )
+        .then( map( processOption( config.target ) ) )
         .then( map( process ) )
         .then( waitForAll )
 }
-
