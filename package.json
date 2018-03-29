@@ -1,6 +1,6 @@
 {
   "name": "lymph-devtools",
-  "version": "1.0.0",
+  "version": "0.15.0",
   "description": "tools for working with 'rich' client applications",
   "main": "lib/index.js",
   "scripts": {
