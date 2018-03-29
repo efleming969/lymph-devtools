@@ -1,6 +1,6 @@
 {
   "name": "lymph-devtools",
-  "version": "0.14.0",
+  "version": "1.0.0",
   "description": "tools for working with 'rich' client applications",
   "main": "lib/index.js",
   "scripts": {
@@ -46,7 +46,10 @@
       "ts",
       "js"
     ],
-    "testPathIgnorePatterns": ["/samples/", "/node_modules/"],
+    "testPathIgnorePatterns": [
+      "/samples/",
+      "/node_modules/"
+    ],
     "testMatch": [
       "**/*.tests.ts"
     ],
