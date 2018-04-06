@@ -11,7 +11,9 @@ export type TemplateOptions = {
 }
 
 export const render = function ( options: TemplateOptions ) {
-    const template_file = Path.join( options.directory, `${ options.name }.pug` )
+    const template_file = Path.join( options.directory, "pages", `${ options.name }.pug` )
+
+    console.log( template_file )
 
     return new Promise( function ( resolve, reject ) {
         Pug.renderFile( template_file, options, function ( err, rendered_template ) {
