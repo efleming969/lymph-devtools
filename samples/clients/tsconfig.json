@@ -4,6 +4,8 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "alwaysStrict": false,
-    "sourceMap": true
+    "sourceMap": true,
+    "jsx": "react",
+    "jsxFactory": "h"
   }
 }

@@ -13,6 +13,7 @@
     "url": "https://github.com/efleming969/lymph-devtools"
   },
   "dependencies": {
+    "@angular/core": "^5.2.9",
     "ajv": "^6.2.1",
     "archiver": "^2.1.1",
     "aws-sdk": "^2.209.0",
@@ -21,7 +22,10 @@
     "globby": "^8.0.1",
     "lymph-service": "^0.2.0",
     "postcss": "^6.0.19",
+    "preact": "^8.2.7",
     "pug": "^2",
+    "react": "^16.3.1",
+    "react-dom": "^16.3.1",
     "rollup": "^0.56.5",
     "rollup-plugin-node-resolve": "^3.2.0",
     "rollup-plugin-uglify": "^3.0.0",

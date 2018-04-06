@@ -30,7 +30,7 @@ export const run = function ( config ) {
 
         res.header( { "content-type": "application/javascript" } )
 
-        Scripts.render( { name, directory } )
+        Scripts.render( { name, directory, dependencies: config.dependencies } )
             .then( output => res.send( output ) )
             .catch( error => res.status( 404 ).send( `${ name } not found` ) )
     } )

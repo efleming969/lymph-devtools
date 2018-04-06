@@ -7,26 +7,39 @@ import { Config } from "./index"
 
 export type ScriptOptions = {
     name: string,
-    directory: string
+    directory: string,
+    dependencies: Map<string, string>
 }
 
 export const render = function ( options: ScriptOptions ) {
-    const source_file = Path.join( options.directory, `${ options.name }.ts` )
-    const import_regex = /import .* from "(\.{1,2}\/[a-zA-Z\-]*)"/g
+    const source_file_pattern = Path.join( options.directory, `${ options.name }.t{s,sx}` )
+    const import_regex = /import .* from "([a-zA-Z\-]*)"/g
 
-    return FS.readFile( source_file, "utf8" ).then( function ( typescript_source ) {
-        const result = Typescript.transpileModule( typescript_source, {
-            compilerOptions: {
-                module: Typescript.ModuleKind.ES2015,
-                inlineSources: true,
-                inlineSourceMap: true
-            },
-            fileName: source_file
+    return Glob( source_file_pattern )
+        .then( matches => matches.length > 0 ? matches[ 0 ] : "" )
+        .then( source_file => FS.readFile( source_file, "utf8" )
+            .then( source => Object.assign( {}, {
+                source_file,
+                source
+            } ) ) )
+        .then( function ( input ) {
+            return Typescript.transpileModule( input.source, {
+                compilerOptions: {
+                    module: Typescript.ModuleKind.ES2015,
+                    target: Typescript.ScriptTarget.ES2015,
+                    inlineSources: true,
+                    inlineSourceMap: true,
+                    jsx: Typescript.JsxEmit.React,
+                    jsxFactory: "h"
+                },
+                fileName: input.source_file
+            } )
         } )
-        return result.outputText.replace( import_regex, function ( match, p1 ) {
-            return match.replace( p1, p1 + ".js" )
+        .then( function ( result ) {
+            return result.outputText.replace( import_regex, function ( match, p1 ) {
+                return match.replace( p1, options.dependencies[ p1 ] )
+            } )
         } )
-    } )
 }
 
 export const compile = ( config: Config ) => function ( typescript_files: string[] ): Promise<string[]> {
