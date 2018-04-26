@@ -29,7 +29,7 @@ export const clean = function ( source: string, target: string, region: string )
     const s3 = new AWS.S3( { region } )
 
     return Promise.all( [
-        s3.listObjectsV2( { Bucket: "lymph" } ).promise().then( x => x.Contents.map( y => y.Key ) ),
+        s3.listObjectsV2( { Bucket: target } ).promise().then( x => x.Contents.map( y => y.Key ) ),
         Glob( source )
     ] ).then( function ( results ) {
         const [ remote_keys, local_files ] = results
