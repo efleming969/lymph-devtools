@@ -1,11 +1,16 @@
 #!/usr/bin/env node
 
 const Server = require( "../lib/Server" )
+const Path = require( "path" )
+
+const clients_dir = Path.join( process.cwd(), "samples", "clients" )
 
 Server.run( {
     port: 8080,
-    root: "samples/clients/src",
+    source: Path.join( clients_dir, "src" ),
+    target: Path.join( clients_dir, "dist" ),
     dependencies: {
-        "preact": "https://cdn.jsdelivr.net/npm/preact@8.2.7/dist/preact.esm.js"
+        "ultradom": [ "ultradom" ],
+        "preact": [ "preact" ]
     }
 } )

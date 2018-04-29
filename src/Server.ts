@@ -1,54 +1,39 @@
 import * as Express from "express"
-import * as Path from "path"
 
 import * as Templates from "./client/Templates"
 import * as Styles from "./client/Styles"
 import * as Scripts from "./client/Scripts"
+import * as Assets from "./client/Assets"
+import * as Modules from "./client/Modules"
 
-const createPathFromRoot = root => base_name =>
-    Path.join( process.cwd(), root, base_name )
+import { ensureDirs } from "./client"
 
 export const run = function ( config ) {
-
     const app = Express()
-    const pathFromRoot = createPathFromRoot( config.root )
 
-    app.get( "/:page_name.html", function ( req, res ) {
-        const name = req.params.page_name
-        const directory = pathFromRoot( "." )
+    app.use( "/static", Express.static( config.target ) )
 
-        res.header( { "content-type": "text/html" } )
+    app.get( "/:module_name", function ( req, res ) {
+        const module_name = req.params.module_name
 
-        Templates.render( { name, directory } )
-            .then( output => res.send( output ) )
-            .catch( error => res.status( 404 ).send( `${ name } not found` ) )
+        Modules.readConfig( config, module_name )
+            .then( Scripts.compile( config ) )
+            .then( Styles.compile( config ) )
+            .then( Templates.render( config ) )
+            .then( ( rendered_template ) => res.send( rendered_template ) )
+            .catch( ( error ) => res.status( 500 ).send( error ) )
     } )
 
-    app.get( "/scripts/:script_name.js", function ( req, res ) {
-        const name = req.params.script_name
-        const directory = pathFromRoot( "scripts" )
-
-        res.header( { "content-type": "application/javascript" } )
-
-        Scripts.render( { name, directory, dependencies: config.dependencies } )
-            .then( output => res.send( output ) )
-            .catch( error => res.status( 404 ).send( `${ name } not found` ) )
-    } )
-
-    app.get( "/styles/:style_name.css", function ( req, res ) {
-        const name = req.params.style_name
-        const directory = pathFromRoot( "styles" )
-
-        res.header( { "content-type": "text/css" } )
-
-        Styles.render( { name, directory } )
-            .then( output => res.send( output ) )
-            .catch( error => res.status( 404 ).send( `${ name } not found` ) )
-    } )
-
-    app.use( Express.static( config.root ) )
-
-    app.listen( config.port, function () {
-        console.log( `server running @ ${ config.port }` )
-    } )
+    ensureDirs( config )
+        .then( Assets.copy )
+        .then( Scripts.compileDependencies )
+        .then( Styles.compileDependencies )
+        .then( function ( config ) {
+            app.listen( config.port, function () {
+                console.log( `server running @ ${ config.port }` )
+            } )
+        } )
+        .catch( function ( error ) {
+            console.log( error )
+        } )
 }

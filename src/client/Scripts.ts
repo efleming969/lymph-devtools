@@ -2,6 +2,7 @@ import * as Typescript from "typescript"
 import * as Path from "path"
 import * as Glob from "globby"
 import * as FS from "fs-extra"
+import * as Webpack from "webpack"
 
 import { Config } from "./index"
 
@@ -11,73 +12,167 @@ export type ScriptOptions = {
     dependencies: Map<string, string>
 }
 
-export const render = function ( options: ScriptOptions ) {
-    const source_file_pattern = Path.join( options.directory, `${ options.name }.t{s,sx}` )
-    const import_regex = /import .* from "([a-zA-Z\-]*)"/g
+export const compileDependencies = function ( config ) {
+    console.log( "==================================================" )
+    console.log( "Generating dependencies" )
+    console.log( "==================================================" )
 
-    return Glob( source_file_pattern )
-        .then( matches => matches.length > 0 ? matches[ 0 ] : "" )
-        .then( source_file => FS.readFile( source_file, "utf8" )
-            .then( source => Object.assign( {}, {
-                source_file,
-                source
-            } ) ) )
-        .then( function ( input ) {
-            return Typescript.transpileModule( input.source, {
-                compilerOptions: {
-                    module: Typescript.ModuleKind.ES2015,
-                    target: Typescript.ScriptTarget.ES2015,
-                    inlineSources: true,
-                    inlineSourceMap: true,
-                    jsx: Typescript.JsxEmit.React,
-                    jsxFactory: "h"
+    const dependencies_dir = Path.join( config.target, "dependencies" )
+
+    const dependency_builds = Object.keys( config.dependencies )
+        .map( function ( dependency_name ) {
+            const dll_options = {
+                name: dependency_name,
+                entry: config.dependencies[ dependency_name ],
+                mode: "development",
+                output: {
+                    path: dependencies_dir,
+                    filename: `${ dependency_name }.js`,
+                    library: dependency_name
                 },
-                fileName: input.source_file
+                plugins: [
+                    new Webpack.DllPlugin( {
+                        name: dependency_name,
+                        path: Path.join( dependencies_dir, `${ dependency_name }.json` )
+                    } )
+                ]
+            }
+
+            return new Promise( function ( resolve, reject ) {
+                Webpack( dll_options, function ( err, results ) {
+                    if ( err ) {
+                        reject( err )
+                    }
+                    else {
+                        console.log( results.toString() )
+                        resolve( config.dependencies )
+                    }
+                } )
             } )
         } )
-        .then( function ( result ) {
-            return result.outputText.replace( import_regex, function ( match, p1 ) {
-                return match.replace( p1, options.dependencies[ p1 ] )
-            } )
-        } )
+
+    return Promise.all( dependency_builds ).then( () => config )
 }
 
-export const compile = ( config: Config ) => function ( typescript_files: string[] ): Promise<string[]> {
-    const compile_options = {
-        noEmitOnError: true,
-        noImplicitAny: false,
-        target: Typescript.ScriptTarget.ES2015,
-        module: Typescript.ModuleKind.ES2015,
-        moduleResolution: Typescript.ModuleResolutionKind.NodeJs,
-        outDir: Path.join( config.target, "scripts" )
+export const compile = ( config ) => function ( module_config ) {
+    console.log( "==================================================" )
+    console.log( "Generating module script" )
+    console.log( "==================================================" )
+
+    const webpack_config = {
+        name: module_config.name,
+        entry: Path.join( config.source, "modules", module_config.name, "index.ts" ),
+        mode: "development",
+        output: {
+            path: Path.join( config.target, "scripts" ),
+            filename: `${ module_config.name }.js`
+        },
+        module: {
+            rules: [ {
+                test: /\.tsx?$/,
+                loader: "ts-loader",
+                options: {
+                    transpileOnly: true
+                }
+            } ]
+        },
+        resolve: {
+            extensions: [ ".ts", ".tsx" ]
+        },
+        plugins: [
+            new Webpack.DllReferencePlugin( {
+                manifest: Path.join( config.target, "dependencies", `${ module_config.dependencies }.json` )
+            } )
+        ]
     }
 
-    const program = Typescript.createProgram( typescript_files, compile_options )
-
     return new Promise( function ( resolve, reject ) {
-        const emitResult = program.emit()
-
-        const allDiagnostics = Typescript.getPreEmitDiagnostics( program )
-            .concat( emitResult.diagnostics )
-
-        const results = allDiagnostics.map( function ( diagnostic ) {
-            if ( diagnostic.file ) {
-                let { line, character } =
-                    diagnostic.file.getLineAndCharacterOfPosition( diagnostic.start )
-
-                let message =
-                    Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )
-
-                return `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`
+        Webpack( webpack_config, function ( err, results ) {
+            if ( err ) {
+                reject( err )
             }
             else {
-                return `${Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )}`
+                console.log( results.toString() )
+                resolve( module_config )
             }
         } )
-
-        results.length > 0 ? reject( results ) : resolve( typescript_files )
     } )
 }
+
+// export const render = function ( config ) {
+//     const compile_options = {
+//         noEmitOnError: true,
+//         noImplicitAny: false,
+//         target: Typescript.ScriptTarget.ES2015,
+//         module: Typescript.ModuleKind.CommonJS,
+//         moduleResolution: Typescript.ModuleResolutionKind.NodeJs,
+//         isolatedModules: true
+//     }
+//
+//     const module_file = Path.join( config.directory, "src", "scripts", `${ config.name }.js` )
+//     const program = Typescript.createProgram( [ module_file ], compile_options )
+//
+//     return new Promise( function ( resolve, reject ) {
+//         const emitResult = program.emit()
+//
+//         const allDiagnostics = Typescript.getPreEmitDiagnostics( program )
+//             .concat( emitResult.diagnostics )
+//
+//         const results = allDiagnostics.map( function ( diagnostic ) {
+//             if ( diagnostic.file ) {
+//                 let { line, character } =
+//                     diagnostic.file.getLineAndCharacterOfPosition( diagnostic.start )
+//
+//                 let message =
+//                     Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )
+//
+//                 return `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`
+//             }
+//             else {
+//                 return `${Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )}`
+//             }
+//         } )
+//
+//         results.length > 0 ? reject( results ) : resolve()
+//     } )
+// }
+
+// export const compile = ( config: Config ) => function ( typescript_files: string[] ): Promise<string[]> {
+//     const compile_options = {
+//         noEmitOnError: true,
+//         noImplicitAny: false,
+//         target: Typescript.ScriptTarget.ES2015,
+//         module: Typescript.ModuleKind.ES2015,
+//         moduleResolution: Typescript.ModuleResolutionKind.NodeJs,
+//         outDir: Path.join( config.target, "scripts" )
+//     }
+//
+//     const program = Typescript.createProgram( typescript_files, compile_options )
+//
+//     return new Promise( function ( resolve, reject ) {
+//         const emitResult = program.emit()
+//
+//         const allDiagnostics = Typescript.getPreEmitDiagnostics( program )
+//             .concat( emitResult.diagnostics )
+//
+//         const results = allDiagnostics.map( function ( diagnostic ) {
+//             if ( diagnostic.file ) {
+//                 let { line, character } =
+//                     diagnostic.file.getLineAndCharacterOfPosition( diagnostic.start )
+//
+//                 let message =
+//                     Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )
+//
+//                 return `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`
+//             }
+//             else {
+//                 return `${Typescript.flattenDiagnosticMessageText( diagnostic.messageText, '\n' )}`
+//             }
+//         } )
+//
+//         results.length > 0 ? reject( results ) : resolve( typescript_files )
+//     } )
+// }
 
 const filterOutTests = function ( files: string[] ): string[] {
     return files.filter( file => !file.endsWith( "tests.ts" ) )

@@ -10,6 +10,8 @@ build
 samples/**/*.js
 samples/**/*.js.map
 
+dist
+
 src/**/*.js
 src/**/*.js.map
 

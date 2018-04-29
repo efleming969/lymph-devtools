@@ -1,9 +1,9 @@
 import * as FS from "fs-extra"
+import * as Path from "path"
 
 import * as Scripts from "./Scripts"
 import * as Styles from "./Styles"
 import * as Templates from "./Templates"
-import * as Bundles from "./Bundles"
 import * as Statics from "./Statics"
 import * as S3 from "./S3"
 
@@ -22,13 +22,24 @@ export const deploy = function ( source: string, target: string, region: string 
         .then( () => S3.clean( source, target, region ) )
 }
 
-export const build = function ( config: Config ) {
-    return FS.remove( config.target ).then( () => Promise.all( [
-        Statics.build( config ),
-        Styles.build( config ),
-        Templates.build( config ),
-        Scripts.build( config )
-            .then( () => Bundles.build( config ) )
-    ] ) )
+export const copyAssets = function ( config ) {
+    const assets_source_dir = Path.join( config.source, "assets" )
+    const assets_target_dir = Path.join( config.target, "assets" )
+
+    return FS.copy( assets_source_dir, assets_target_dir ).then( () => config )
 }
 
+export const build = function ( config: Config ) {
+    return ensureDirs( config )
+        .then( copyAssets )
+        .then( Scripts.compileDependencies )
+        .then( Styles.compileDependencies )
+}
+
+export const ensureDirs = function ( config ) {
+    const dirs = [ "assets", "styles", "scripts", "dependencies" ]
+
+    return Promise.all( dirs.map( function ( dir_name ) {
+        return FS.ensureDir( Path.join( config.target, dir_name ) )
+    } ) ).then( () => config )
+}

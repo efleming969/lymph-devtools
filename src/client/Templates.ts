@@ -1,41 +1,32 @@
-import * as Pug from "pug"
+import * as Handlebars from "handlebars"
 import * as FS from "fs-extra"
 import * as Path from "path"
-import * as Glob from "globby"
 
 import { Config } from "./index"
 
-export type TemplateOptions = {
-    name: string,
-    directory: string
+const compileTemplate = function ( module_name, dependencies, raw_template ) {
+    Handlebars.registerHelper( "module", function () {
+        const dependencies_script = `<script src="/static/dependencies/${ dependencies }.js"></script>`
+        const module_style = `<link rel="stylesheet" href="/static/styles/${ module_name }.css">`
+        const module_script = `<script src="/static/scripts/${ module_name }.js" defer></script>`
+
+        return new Handlebars.SafeString(
+            dependencies_script + module_style + module_script )
+    } )
+
+    return Handlebars.compile( raw_template )
 }
 
-export const render = function ( options: TemplateOptions ) {
-    const template_file = Path.join( options.directory, "pages", `${ options.name }.pug` )
+export const build = function ( config: Config, module_config ) {
 
-    console.log( template_file )
-
-    return new Promise( function ( resolve, reject ) {
-        Pug.renderFile( template_file, options, function ( err, rendered_template ) {
-            if ( err ) reject( err )
-            else resolve( rendered_template )
-        } )
-    } )
 }
 
-export const build = function ( config: Config ) {
-    const pug_file_pattern = Path.join( config.source, "pages", "**", "*.pug" )
+export const render = ( config ) => function ( module_config ) {
+    const template_file = Path.join(
+        config.source, "templates", `${ module_config.template }.html` )
 
-    return Glob( pug_file_pattern ).then( function ( pug_files ) {
-        return pug_files.map( function ( pug_file ) {
-            const name = Path.basename( pug_file, ".pug" )
-            const target_file = Path.join( config.target, `${ name }.html` )
-            console.log( `compiling ${ pug_file } to ${ target_file }` )
-            const render_options = { name }
-            const render_content = Pug.renderFile( pug_file, render_options )
-
-            return FS.writeFile( target_file, render_content )
-        } )
-    } )
+    return FS.readFile( template_file, "utf8" )
+        .then( ( raw_template ) => compileTemplate( module_config.name, module_config.dependencies, raw_template ) )
+        .then( ( compiled_template ) => compiled_template( module_config.data ) )
 }
 
