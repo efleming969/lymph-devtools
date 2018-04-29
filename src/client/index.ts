@@ -38,8 +38,12 @@ export const build = function ( config: Config ) {
 
 export const ensureDirs = function ( config ) {
     const dirs = [ "assets", "styles", "scripts", "dependencies" ]
+    const modules_dir = Path.join( config.source, "modules" )
 
-    return Promise.all( dirs.map( function ( dir_name ) {
-        return FS.ensureDir( Path.join( config.target, dir_name ) )
-    } ) ).then( () => config )
+    return FS.readdir( modules_dir ).then( function ( modules ) {
+        const config_with_modules = Object.assign( {}, config, { modules } )
+        return Promise.all( dirs.concat( modules ).map( function ( dir_name ) {
+            return FS.ensureDir( Path.join( config.target, dir_name ) )
+        } ) ).then( () => config_with_modules )
+    } )
 }

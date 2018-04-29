@@ -21,12 +21,19 @@ export const build = function ( config: Config, module_config ) {
 
 }
 
-export const render = ( config ) => function ( module_config ) {
-    const template_file = Path.join(
+export const compile = ( config ) => function ( module_config ) {
+    const template_source_file = Path.join(
         config.source, "templates", `${ module_config.template }.html` )
 
-    return FS.readFile( template_file, "utf8" )
+    const template_target_file = Path.join(
+        config.target, module_config.name, "index.html" )
+
+    console.log( "compiling", template_target_file )
+
+    return FS.readFile( template_source_file, "utf8" )
         .then( ( raw_template ) => compileTemplate( module_config.name, module_config.dependencies, raw_template ) )
         .then( ( compiled_template ) => compiled_template( module_config.data ) )
+        .then( ( rendered_template ) => FS.writeFile( template_target_file, rendered_template, "utf8" ) )
+        .then( () => module_config )
 }
 
