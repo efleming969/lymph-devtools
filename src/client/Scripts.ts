@@ -13,11 +13,11 @@ export type ScriptOptions = {
 }
 
 export const compileDependencies = function ( config ) {
-    console.log( "==================================================" )
-    console.log( "Generating dependencies" )
+    console.log( "" )
+    console.log( "Compiling dependencies" )
     console.log( "==================================================" )
 
-    const dependencies_dir = Path.join( config.target, "dependencies" )
+    const dependencies_dir = Path.join( config.target, "assets", "scripts" )
 
     const dependency_builds = Object.keys( config.dependencies )
         .map( function ( dependency_name ) {
@@ -55,8 +55,8 @@ export const compileDependencies = function ( config ) {
 }
 
 export const compile = ( config ) => function ( module_config ) {
-    console.log( "==================================================" )
-    console.log( "Generating module script" )
+    console.log( "" )
+    console.log( "Compiling module script" )
     console.log( "==================================================" )
 
     const webpack_config = {
@@ -64,8 +64,8 @@ export const compile = ( config ) => function ( module_config ) {
         entry: Path.join( config.source, "modules", module_config.name, "index.ts" ),
         mode: "development",
         output: {
-            path: Path.join( config.target, "scripts" ),
-            filename: `${ module_config.name }.js`
+            path: Path.join( config.target, module_config.name ),
+            filename: "index.js"
         },
         module: {
             rules: [ {
@@ -81,7 +81,7 @@ export const compile = ( config ) => function ( module_config ) {
         },
         plugins: [
             new Webpack.DllReferencePlugin( {
-                manifest: Path.join( config.target, "dependencies", `${ module_config.dependencies }.json` )
+                manifest: Path.join( config.target, "assets", "scripts", `${ module_config.dependencies }.json` )
             } )
         ]
     }

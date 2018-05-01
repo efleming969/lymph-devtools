@@ -4,9 +4,9 @@ import * as Sass from "sass"
 
 export const compileDependencies = function ( config ) {
     const source_styles_dir = Path.join( config.source, "styles" )
-    const target_styles_dir = Path.join( config.target, "styles" )
+    const target_styles_dir = Path.join( config.target, "assets", "styles" )
 
-    console.log( "==================================================" )
+    console.log( "" )
     console.log( "Compiling shared styles" )
     console.log( "==================================================" )
 
@@ -35,12 +35,12 @@ export const compileDependencies = function ( config ) {
 }
 
 export const compile = ( config ) => function ( module_config ) {
-    console.log( "==================================================" )
+    console.log( "" )
     console.log( "Compiling module styles" )
     console.log( "==================================================" )
 
     const source_file = Path.join( config.source, "modules", module_config.name, "index.scss" )
-    const target_file = Path.join( config.target, "styles", `${ module_config.name }.css` )
+    const target_file = Path.join( config.target, module_config.name, "index.css" )
 
     return new Promise( function ( resolve, reject ) {
         console.log( source_file )

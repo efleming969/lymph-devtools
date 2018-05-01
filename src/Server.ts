@@ -12,11 +12,13 @@ import { ensureDirs } from "./client"
 export const run = function ( config ) {
     const app = Express()
 
-    app.use( "/static", Express.static( config.target ) )
-
-    app.get( "/:module_name", function ( req, res ) {
+    app.get( "/:module_name/", function ( req, res ) {
         const module_name = req.params.module_name
         const module_file_path = Path.join( config.target, module_name, "index.html" )
+
+        console.log( "" )
+        console.log( `Processing ${ module_name } module` )
+        console.log( "--------------------------------------------------" )
 
         Modules.readConfig( config, module_name )
             .then( Scripts.compile( config ) )
@@ -25,6 +27,8 @@ export const run = function ( config ) {
             .then( () => res.sendFile( module_file_path ) )
             .catch( ( error ) => res.status( 500 ).send( error ) )
     } )
+
+    app.use( "/", Express.static( config.target ) )
 
     ensureDirs( config )
         .then( Assets.copy )

@@ -3,8 +3,6 @@ import * as Path from "path"
 
 import * as Scripts from "./Scripts"
 import * as Styles from "./Styles"
-import * as Templates from "./Templates"
-import * as Statics from "./Statics"
 import * as S3 from "./S3"
 
 // need an unused import to solve type checker issues
@@ -37,7 +35,7 @@ export const build = function ( config: Config ) {
 }
 
 export const ensureDirs = function ( config ) {
-    const dirs = [ "assets", "styles", "scripts", "dependencies" ]
+    const dirs = [ "assets/styles", "assets/scripts" ]
     const modules_dir = Path.join( config.source, "modules" )
 
     return FS.readdir( modules_dir ).then( function ( modules ) {
