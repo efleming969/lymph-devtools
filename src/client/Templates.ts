@@ -7,8 +7,14 @@ import { Config } from "./index"
 const compileTemplate = function ( module_name, dependencies, raw_template ) {
     Handlebars.registerHelper( "module", function () {
         const dependencies_script = `<script src="/assets/scripts/${ dependencies }.js"></script>`
-        const module_style = `<link rel="stylesheet" href="/${ module_name }/index.css">`
-        const module_script = `<script src="/${ module_name }/index.js" defer></script>`
+
+        const module_style = module_name === "_"
+            ? `<link rel="stylesheet" href="/index.css">`
+            : `<link rel="stylesheet" href="/${ module_name }/index.css">`
+
+        const module_script = module_name === "_"
+            ? `<script src="/index.js" defer></script>`
+            : `<script src="/${ module_name }/index.js" defer></script>`
 
         return new Handlebars.SafeString(
             dependencies_script + module_style + module_script )
@@ -29,8 +35,9 @@ export const compile = ( config ) => function ( module_config ) {
     const template_source_file = Path.join(
         config.source, "templates", `${ module_config.template }.html` )
 
-    const template_target_file = Path.join(
-        config.target, module_config.name, "index.html" )
+    const template_target_file = module_config.name === "_"
+        ? Path.join( config.target, "index.html" )
+        : Path.join( config.target, module_config.name, "index.html" )
 
     console.log( template_source_file )
 

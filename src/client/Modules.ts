@@ -2,7 +2,9 @@ import * as Path from "path"
 import * as FS from "fs-extra"
 
 export const readConfig = function ( config, module_name ) {
-    const module_config_file = Path.join( config.source, "modules", module_name, "index.json" )
+    const module_config_file = module_name === "_"
+        ? Path.join( config.source, "modules", "index.json" )
+        : Path.join( config.source, "modules", module_name, "index.json" )
 
     console.log( "" )
     console.log( `Reading module config` )

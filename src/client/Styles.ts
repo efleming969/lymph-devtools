@@ -39,8 +39,13 @@ export const compile = ( config ) => function ( module_config ) {
     console.log( "Compiling module styles" )
     console.log( "==================================================" )
 
-    const source_file = Path.join( config.source, "modules", module_config.name, "index.scss" )
-    const target_file = Path.join( config.target, module_config.name, "index.css" )
+    const source_file = module_config.name === "_"
+        ? Path.join( config.source, "modules", "index.scss" )
+        : Path.join( config.source, "modules", module_config.name, "index.scss" )
+
+    const target_file = module_config.name === "_"
+        ? Path.join( config.target, "index.css" )
+        : Path.join( config.target, module_config.name, "index.css" )
 
     return new Promise( function ( resolve, reject ) {
         console.log( source_file )

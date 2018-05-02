@@ -1,5 +1,4 @@
 import * as Express from "express"
-import * as Path from "path"
 
 import * as Templates from "./client/Templates"
 import * as Styles from "./client/Styles"
@@ -9,27 +8,42 @@ import * as Modules from "./client/Modules"
 
 import { ensureDirs } from "./client"
 
-export const run = function ( config ) {
+const runWebServer = function ( config ) {
     const app = Express()
 
-    app.get( "/:module_name/", function ( req, res ) {
-        const module_name = req.params.module_name
-        const module_file_path = Path.join( config.target, module_name, "index.html" )
+    app.use( function ( req, res, next ) {
+        const is_not_module = req.url.startsWith( "/assets" )
+            || /index\.(css|js)$/g.test( req.url )
+            || !req.url.endsWith( "/" )
 
-        console.log( "" )
-        console.log( `Processing ${ module_name } module` )
-        console.log( "--------------------------------------------------" )
+        if ( is_not_module ) {
+            next()
+        }
+        else {
+            // underscore is the alias for the root module
+            const module_name = req.url === "/" ? "_" : req.url.replace( "/", "" )
 
-        Modules.readConfig( config, module_name )
-            .then( Scripts.compile( config ) )
-            .then( Styles.compile( config ) )
-            .then( Templates.compile( config ) )
-            .then( () => res.sendFile( module_file_path ) )
-            .catch( ( error ) => res.status( 500 ).send( error ) )
+            console.log( "" )
+            console.log( `Processing ${ module_name } module` )
+            console.log( "--------------------------------------------------" )
+
+            Modules.readConfig( config, module_name )
+                .then( Scripts.compile( config ) )
+                .then( Styles.compile( config ) )
+                .then( Templates.compile( config ) )
+                .then( () => next() )
+                .catch( ( error ) => res.status( 500 ).send( error ) )
+        }
     } )
 
     app.use( "/", Express.static( config.target ) )
 
+    app.listen( config.port, function () {
+        console.log( `server running @ ${ config.port }` )
+    } )
+}
+
+export const run = function ( config ) {
     ensureDirs( config )
         .then( Assets.copy )
         .then( Scripts.compileDependencies )
@@ -42,11 +56,7 @@ export const run = function ( config ) {
                     .then( Templates.compile( config ) )
             } ) ).then( () => config )
         } )
-        .then( function ( config ) {
-            app.listen( config.port, function () {
-                console.log( `server running @ ${ config.port }` )
-            } )
-        } )
+        .then( runWebServer )
         .catch( function ( error ) {
             console.log( error )
         } )

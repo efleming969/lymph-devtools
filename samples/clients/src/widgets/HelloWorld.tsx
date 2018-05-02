@@ -1,3 +1,3 @@
 import { h } from "preact"
 
-export const message = name => <h2><a href="/">whatup, { name }</a></h2>
+export const message = name => <h2><a href="/">Whatup, { name }!</a></h2>

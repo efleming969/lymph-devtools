@@ -1,5 +1,6 @@
 import * as FS from "fs-extra"
 import * as Path from "path"
+import * as Globby from "globby"
 
 import * as Scripts from "./Scripts"
 import * as Styles from "./Styles"
@@ -21,25 +22,26 @@ export const deploy = function ( source: string, target: string, region: string 
 }
 
 export const copyAssets = function ( config ) {
-    const assets_source_dir = Path.join( config.source, "assets" )
-    const assets_target_dir = Path.join( config.target, "assets" )
+    const assets_source_dir = Path.join( config.source, "images" )
+    const assets_target_dir = Path.join( config.target, "images" )
 
     return FS.copy( assets_source_dir, assets_target_dir ).then( () => config )
 }
 
-export const build = function ( config: Config ) {
-    return ensureDirs( config )
-        .then( copyAssets )
-        .then( Scripts.compileDependencies )
-        .then( Styles.compileDependencies )
-}
-
 export const ensureDirs = function ( config ) {
-    const dirs = [ "assets/styles", "assets/scripts" ]
+    const dirs = [ "assets/styles", "assets/scripts", "assets/images" ]
     const modules_dir = Path.join( config.source, "modules" )
 
-    return FS.readdir( modules_dir ).then( function ( modules ) {
-        const config_with_modules = Object.assign( {}, config, { modules } )
+    return FS.readdir( modules_dir ).then( function ( all_files_in_modules ) {
+        const modules = all_files_in_modules
+            .map( x => Path.join( modules_dir, x ) )
+            .filter( x => FS.lstatSync( x ).isDirectory() )
+            .map( x => Path.basename( x ) )
+
+        const config_with_modules = Object.assign( {}, config, {
+            modules: modules.concat( "_" )
+        } )
+
         return Promise.all( dirs.concat( modules ).map( function ( dir_name ) {
             return FS.ensureDir( Path.join( config.target, dir_name ) )
         } ) ).then( () => config_with_modules )
