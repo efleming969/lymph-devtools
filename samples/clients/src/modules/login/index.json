@@ -1,0 +1,5 @@
+{
+  "template": "spa",
+  "dependencies": "ultradom",
+  "data": {"title": "SPA"}
+}

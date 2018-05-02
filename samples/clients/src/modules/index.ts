@@ -1,5 +1,10 @@
 import { render, h } from "preact"
 
 document.addEventListener( "DOMContentLoaded", function () {
-    render( h( "a", { href: "/main" }, "Main" ), document.getElementById( "content" ) )
+    const links = h( "ul", {}, [
+        h( "li", {}, h( "a", { href: "/dashboard" }, "Dashboard" ) ),
+        h( "li", {}, h( "a", { href: "/login" }, "Login" ) )
+    ] )
+
+    render( links, document.getElementById( "content" ) )
 } )
