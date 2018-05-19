@@ -1,6 +1,11 @@
 src
+samples
+bin
 
 test-infrastructure.json
 test-infrastructure-artifacts.json
 tsconfig-service.json
 tsconfig.json
+
+jest-preprocessor.js
+jest-setup.js
